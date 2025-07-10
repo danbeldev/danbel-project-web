@@ -124,6 +124,15 @@ const ApiService = {
         }
     },
 
+    updateArticle: async (id, articleData) => {
+        try {
+            const response = await api.put(`/articles/${id}`, articleData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getArticleById: async (id) => {
         try {
             const response = await api.get(`/articles/${id}`);
@@ -186,7 +195,7 @@ const ApiService = {
             userId: localStorage.getItem('userId'),
             userRole: localStorage.getItem('userRole'),
         };
-    },
+    }
 };
 
 export default ApiService;
