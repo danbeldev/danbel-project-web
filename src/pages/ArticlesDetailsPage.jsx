@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {
     Box,
@@ -8,20 +8,46 @@ import {
     Chip,
     Avatar,
     Stack,
-    Divider
+    Divider, Card, CardContent
 } from '@mui/material';
-import { format } from 'date-fns';
+import {format} from 'date-fns';
 import ApiService from '../network/API';
 
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import MarkdownContent from "../components/MarkdownContent";
 
+export const difficultyTranslation = {
+    EASY: 'Лёгкая',
+    MEDIUM: 'Средняя',
+    HARD: 'Сложная'
+};
+
+export const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+        case 'EASY':
+            return 'success';
+        case 'MEDIUM':
+            return 'warning';
+        case 'HARD':
+            return 'error';
+        default:
+            return 'primary';
+    }
+};
+
+const difficultyOrder = {
+    EASY: 1,
+    MEDIUM: 2,
+    HARD: 3
+};
+
 export const ArticlesDetailsPage = ({mode}) => {
     const navigate = useNavigate();
 
-    const { id } = useParams();
+    const {id} = useParams();
     const [article, setArticle] = useState(null);
+    const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -30,6 +56,11 @@ export const ArticlesDetailsPage = ({mode}) => {
             try {
                 const data = await ApiService.getArticleById(id);
                 setArticle(data);
+
+                const probData = await ApiService.getProblems(id);
+                setProblems(probData.sort((a, b) => {
+                    return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+                }));
             } catch (err) {
                 setError(err.message || 'Ошибка загрузки статьи');
             } finally {
@@ -51,7 +82,7 @@ export const ArticlesDetailsPage = ({mode}) => {
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" mt={4}>
-                <CircularProgress />
+                <CircularProgress/>
             </Box>
         );
     }
@@ -65,14 +96,14 @@ export const ArticlesDetailsPage = ({mode}) => {
     }
 
     return (
-        <Container maxWidth="md" sx={{ py: 4 }}>
+        <Container maxWidth="md" sx={{py: 4}}>
             {/* Обложка */}
             {article.coverFileName && (
                 <Box mb={3}>
                     <img
                         src={`https://map.matstart.ru:30/danbel-project-api/files/${article.coverFileName}`}
                         alt={article.title}
-                        style={{ width: '100%', borderRadius: 12 }}
+                        style={{width: '100%', borderRadius: 12}}
                     />
                 </Box>
             )}
@@ -94,7 +125,7 @@ export const ArticlesDetailsPage = ({mode}) => {
                 spacing={1}
                 mb={2}
                 onClick={() => navigate("/users/" + article.author.id)}
-                sx={{ cursor: 'pointer' }}
+                sx={{cursor: 'pointer'}}
             >
                 <Avatar
                     alt={article.author.username}
@@ -103,7 +134,7 @@ export const ArticlesDetailsPage = ({mode}) => {
                             ? `https://map.matstart.ru:30/danbel-project-api/files/${article.author.avatarFileName}`
                             : undefined
                     }
-                    sx={{ width: 32, height: 32 }}
+                    sx={{width: 32, height: 32}}
                 />
                 <Typography variant="body2">{article.author.username}</Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -112,15 +143,44 @@ export const ArticlesDetailsPage = ({mode}) => {
             </Stack>
 
             {/* Теги */}
-            <Box mb={2} sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box mb={2} sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
                 {article.tags.map((tag) => (
-                    <Chip key={tag.id} label={tag.name} size="small" color="primary" sx={{ cursor: "pointer" }} onClick={ () => navigate(`/tags/${tag.id}`) } />
+                    <Chip key={tag.id} label={tag.name} size="small" color="primary" sx={{cursor: "pointer"}}
+                          onClick={() => navigate(`/tags/${tag.id}`)}/>
                 ))}
             </Box>
 
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{my: 3}}/>
 
-            <MarkdownContent content={article.content} mode={mode} />
+            <MarkdownContent content={article.content} mode={mode}/>
+
+            <div>
+                {problems.length > 0 &&
+                    <h1>Задания</h1>
+                }
+                {problems.map((problem) => (
+                    <Card
+                        key={problem.id} sx={{mb: 2, cursor: 'pointer'}}
+                        onClick={() => {
+                            navigate(`/problems/${problem.id}`);
+                        }}
+                    >
+                        <CardContent>
+                            <Typography variant="h5" component="div">
+                                {problem.title}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{mt: 1, mb: 2}}>
+                                {problem.description.split('\n')[0]}
+                            </Typography>
+                            <Chip
+                                label={difficultyTranslation[problem.difficulty]}
+                                color={getDifficultyColor(problem.difficulty)}
+                                size="small"
+                            />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </Container>
     );
 };

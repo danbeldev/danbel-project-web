@@ -11,6 +11,7 @@ import UserProfilePage from "./pages/UserProfilePage";
 import Footer from "./components/Footer";
 import CreateArticlePage from "./pages/CreateArticlePage";
 import SignInPage from "./pages/SignInPage";
+import {ProblemCodeDetailsPage} from "./pages/ProblemCodeDetailsPage";
 
 const getDesignTokens = (mode) => ({
     palette: {
@@ -134,11 +135,11 @@ function App() {
                 >
                     <Header mode={mode} toggleTheme={toggleTheme} />
 
-                    {/* Main content */}
                     <Box flexGrow={1}>
                         <Routes>
                             <Route path="/articles" element={<ArticlesPage />} />
                             <Route path="/articles/:id" element={<ArticlesDetailsPage mode={mode}/>} />
+                            <Route path="/problems/:problemId" element={<ProblemCodeDetailsPage mode={mode}/>} />
                             <Route path="/articles/new" element={<CreateArticlePage />} />
                             <Route path="/articles/edit/:id" element={<CreateArticlePage />} />
                             <Route path="/tags/:id" element={<TagDetailsPage />} />
@@ -147,8 +148,6 @@ function App() {
                             <Route path="*" element={<Navigate to="/articles" />} />
                         </Routes>
                     </Box>
-
-                    <Footer />
                 </Box>
             </ThemeProvider>
         </BrowserRouter>

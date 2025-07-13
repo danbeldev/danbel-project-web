@@ -195,6 +195,63 @@ const ApiService = {
             userId: localStorage.getItem('userId'),
             userRole: localStorage.getItem('userRole'),
         };
+    },
+
+    getProblems: async (articleId) => {
+        try {
+            const response = await api.get(`/problems?articleId=${articleId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getLanguages: async () => {
+        try {
+            const response = await api.get(`/problems/languages`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getProblem: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    submitSolution: async (problemId, data) => {
+        try {
+            const response = await api.post(`/problems/${problemId}/submit`, data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getSubmissions: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/submissions`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getSubmissionDetails: async (submissionId) => {
+        try {
+            const response = await api.get(`/problems/submissions/${submissionId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getCodeTemplate: async (problemId, languageId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/template?languageId=${languageId}`);
+            return response.data;
+        } catch (error) {
+            // throw error.response?.data || error.message;
+        }
     }
 };
 

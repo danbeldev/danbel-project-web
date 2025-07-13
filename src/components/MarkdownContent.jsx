@@ -23,7 +23,7 @@ function extractHeadings(markdown) {
     return headings;
 }
 
-const MarkdownContent = ({content, mode}) => {
+const MarkdownContent = ({content, mode, showToc = true}) => {
     const parts = content.split(/(\{\{.*?\}\})/g);
 
     // Извлекаем заголовки из частей без плейсхолдеров
@@ -33,46 +33,48 @@ const MarkdownContent = ({content, mode}) => {
 
     return (
         <Box>
-            <Box
-                sx={{
-                    mb: 4,
-                    p: 2,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    backgroundColor: mode === 'dark' ? '#1e1e1e' : '#f9f9f9',
-                }}
-            >
-                <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
-                    <BookOpenText size={20} style={{marginRight: 8}}/>
-                    <Typography variant="h6" fontWeight={600}>
-                        Содержание
-                    </Typography>
+            { showToc &&
+                <Box
+                    sx={{
+                        mb: 4,
+                        p: 2,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        backgroundColor: mode === 'dark' ? '#1e1e1e' : '#f9f9f9',
+                    }}
+                >
+                    <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
+                        <BookOpenText size={20} style={{marginRight: 8}}/>
+                        <Typography variant="h6" fontWeight={600}>
+                            Содержание
+                        </Typography>
+                    </Box>
+                    <Divider sx={{mb: 1}}/>
+                    <List disablePadding>
+                        {headings.map((heading, index) => (
+                            <ListItemButton
+                                key={index}
+                                component={Link}
+                                href={`#${heading.slug}`}
+                                sx={{
+                                    pl: `${(heading.level - 1) * 2 + 1}rem`,
+                                    color: 'text.primary',
+                                    fontSize: Math.max(19 - heading.level, 14),
+                                    borderLeft: '2px solid transparent',
+                                    '&:hover': {
+                                        backgroundColor: mode === 'dark' ? '#2c2c2c' : '#efefef',
+                                        borderLeftColor: 'primary.main',
+                                    },
+                                    transition: 'all 0.2s ease-in-out',
+                                }}
+                            >
+                                {heading.text}
+                            </ListItemButton>
+                        ))}
+                    </List>
                 </Box>
-                <Divider sx={{mb: 1}}/>
-                <List disablePadding>
-                    {headings.map((heading, index) => (
-                        <ListItemButton
-                            key={index}
-                            component={Link}
-                            href={`#${heading.slug}`}
-                            sx={{
-                                pl: `${(heading.level - 1) * 2 + 1}rem`,
-                                color: 'text.primary',
-                                fontSize: Math.max(19 - heading.level, 14),
-                                borderLeft: '2px solid transparent',
-                                '&:hover': {
-                                    backgroundColor: mode === 'dark' ? '#2c2c2c' : '#efefef',
-                                    borderLeftColor: 'primary.main',
-                                },
-                                transition: 'all 0.2s ease-in-out',
-                            }}
-                        >
-                            {heading.text}
-                        </ListItemButton>
-                    ))}
-                </List>
-            </Box>
+            }
 
             {/* Markdown Content */}
             <Box
