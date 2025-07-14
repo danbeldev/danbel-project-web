@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import CreateArticlePage from "./pages/CreateArticlePage";
 import SignInPage from "./pages/SignInPage";
 import {ProblemCodeDetailsPage} from "./pages/ProblemCodeDetailsPage";
+import {ProfilePage} from "./pages/ProfilePage";
 
 const getDesignTokens = (mode) => ({
     palette: {
@@ -145,6 +146,7 @@ function App() {
                             <Route path="/tags/:id" element={<TagDetailsPage />} />
                             <Route path="/users/:id" element={<UserProfilePage />} />
                             <Route path="/sign-in" element={<SignInPage />} />
+                            <Route path="/profile" element={<ProfilePage />} />
                             <Route path="*" element={<Navigate to="/articles" />} />
                         </Routes>
                     </Box>
