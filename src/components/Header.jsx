@@ -10,20 +10,21 @@ import {
     Box,
     Tooltip,
     useMediaQuery,
-    useTheme,
+    useTheme, Avatar,
 } from '@mui/material';
 import {
     ExpandMore,
     Brightness4,
     Brightness7,
     Code,
-    Menu as MenuIcon
+    Menu as MenuIcon, AccountCircle
 } from '@mui/icons-material';
 import ApiService from '../network/API';
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 
 export const Header = ({ mode, toggleTheme }) => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [anchorElTags, setAnchorElTags] = useState(null);
@@ -32,12 +33,15 @@ export const Header = ({ mode, toggleTheme }) => {
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
     const [tags, setTags] = useState([]);
+    const [user, setUser] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     useEffect(() => {
         const fetchTags = async () => {
             try {
                 const data = await ApiService.getAllTags();
                 setTags(data);
+                setUser(await ApiService.getMeUser())
             } catch (err) {
                 console.error('Failed to fetch tags:', err);
             }
@@ -47,6 +51,28 @@ export const Header = ({ mode, toggleTheme }) => {
 
     const handleMenuOpen = (setter) => (event) => setter(event.currentTarget);
     const handleMenuClose = (setter) => () => setter(null);
+
+    const handleLogout = () => {
+
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userRole');
+
+        setUser(null);
+        setAnchorEl(null);
+    };
+
+    const handleMenu = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogin = () => {
+        navigate('/sign-in')
+    }
 
     return (
         <AppBar position="static" elevation={1}>
@@ -301,6 +327,51 @@ export const Header = ({ mode, toggleTheme }) => {
                                 }} sx={{ pl: 3 }}>GitHub</MenuItem>
                             </Menu>
                         </Box>
+                    )}
+
+                    {user ? (
+                        <Box>
+                            <IconButton
+                                size="large"
+                                aria-label="account of current user"
+                                aria-controls="menu-appbar"
+                                aria-haspopup="true"
+                                onClick={handleMenu}
+                                color="inherit"
+                            >
+                                {user.avatarFileName ? (
+                                    <Avatar
+                                        alt={user.username}
+                                        src={`https://map.matstart.ru:30/danbel-project-api/files/${user.avatarFileName}`}
+                                    />
+                                ) : (
+                                    <AccountCircle />
+                                )}
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
+                                <MenuItem onClick={() => {
+                                    handleClose()
+                                    navigate('/profile')
+                                }}>Профиль</MenuItem>
+                                <MenuItem onClick={handleLogout}>Выйти</MenuItem>
+                            </Menu>
+                        </Box>
+                    ) : (
+                        <Button color="inherit" onClick={handleLogin}>Войти</Button>
                     )}
 
                     {/* Переключатель темы (виден на всех устройствах) */}

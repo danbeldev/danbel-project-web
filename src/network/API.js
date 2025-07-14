@@ -252,7 +252,15 @@ const ApiService = {
         } catch (error) {
             // throw error.response?.data || error.message;
         }
-    }
+    },
+    getMeUser: async () => {
+        try {
+            const response = await api.get(`/users/me`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
 };
 
 export default ApiService;

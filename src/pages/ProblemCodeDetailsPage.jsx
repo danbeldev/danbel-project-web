@@ -12,7 +12,7 @@ import {
     useTheme,
     useMediaQuery,
     Tabs,
-    Tab
+    Tab, Checkbox, Card, CardContent, FormControlLabel
 } from '@mui/material';
 import {useParams} from 'react-router-dom';
 import {Editor} from '@monaco-editor/react';
@@ -21,6 +21,7 @@ import {difficultyTranslation, getDifficultyColor} from "./ArticlesDetailsPage";
 import MarkdownContent from "../components/MarkdownContent";
 import SubmissionDetailsDialog from "../components/SubmissionDetailsDialog";
 import ProblemTabs from "../components/ProblemTabs";
+import ProblemLimitsCard from "../components/ProblemLimitsCard";
 
 export const ProblemCodeDetailsPage = ({mode}) => {
     const {problemId} = useParams();
@@ -36,6 +37,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileTab, setMobileTab] = useState(0);
+
+    const [selectedAnswers, setSelectedAnswers] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,7 +68,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
     const handleSubmit = async () => {
         await ApiService.submitSolution(problemId, {
-            code: code,
+            code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : code,
             languageId: selectedLanguage,
         });
         alert('Отправлено!');
@@ -77,6 +80,16 @@ export const ProblemCodeDetailsPage = ({mode}) => {
         const detail = await ApiService.getSubmissionDetails(submissionId);
         setSubmissionDetail(detail);
         setOpenModal(true);
+    };
+
+    const handleAnswerSelect = (answerId) => {
+        setSelectedAnswers(prev => {
+            if (prev.includes(answerId)) {
+                return prev.filter(id => id !== answerId);
+            } else {
+                return [...prev, answerId];
+            }
+        });
     };
 
     if (!problem) return <Typography>Загрузка...</Typography>;
@@ -124,8 +137,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             },
                         }}
                     >
-                        <Tab label="Задача" />
-                        <Tab label="Код" />
+                        <Tab label="Задача"/>
+                        <Tab label="Код"/>
                     </Tabs>
 
                     {mobileTab === 0 && (
@@ -137,9 +150,17 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                 label={difficultyTranslation[problem.difficulty]}
                                 color={getDifficultyColor(problem.difficulty)}
                                 size="small"
-                                sx={{ mb: 2 }}
+                                sx={{mb: 2}}
                             />
-                            <MarkdownContent content={problem.description} mode={mode} showToc={false} />
+                            <MarkdownContent content={problem.description} mode={mode} showToc={false}/>
+
+                            {problem.type === 'CODE' &&
+                                <>
+                                    <ProblemLimitsCard problem={problem}/>
+                                    <div style={{height: "10px"}}/>
+                                </>
+                            }
+
                             <ProblemTabs
                                 problem={problem}
                                 submissions={submissions}
@@ -150,27 +171,35 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
                     {mobileTab === 1 && (
                         <Box p={2}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel id="language-select-label">Язык</InputLabel>
-                                <Select
-                                    labelId="language-select-label"
-                                    value={selectedLanguage}
-                                    label="Язык"
-                                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                                >
-                                    {languages.map((lang) => (
-                                        <MenuItem key={lang.id} value={lang.id}>
-                                            {lang.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            {problem.type === 'INPUT' &&
+                                <>
+                                    <div style={{width: '10px'}}/>
+                                    Напишите ответ
+                                </>
+                            }
+                            {problem.type === 'CODE' &&
+                                <FormControl fullWidth sx={{mb: 2}}>
+                                    <InputLabel id="language-select-label">Язык</InputLabel>
+                                    <Select
+                                        labelId="language-select-label"
+                                        value={selectedLanguage}
+                                        label="Язык"
+                                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                                    >
+                                        {languages.map((lang) => (
+                                            <MenuItem key={lang.id} value={lang.id}>
+                                                {lang.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            }
                             <Button
                                 variant="contained"
                                 fullWidth
                                 color="primary"
                                 onClick={handleSubmit}
-                                sx={{ mb: 2 }}
+                                sx={{mb: 2}}
                             >
                                 Отправить
                             </Button>
@@ -178,23 +207,66 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             <Box
                                 sx={{
                                     height: '60vh',
-                                    border: '1px solid #ccc',
+                                    border: problem.type === 'ANSWERS' ? '0px solid #ccc' : '1px solid #ccc',
                                     borderRadius: 2,
                                     overflow: 'hidden',
                                 }}
                             >
-                                <Editor
-                                    language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
-                                    value={code}
-                                    onChange={(value) => setCode(value || '')}
-                                    options={{
-                                        minimap: { enabled: false },
-                                        fontSize: 14,
-                                    }}
-                                    height="100%"
-                                    width="100%"
-                                    theme={mode === 'dark' ? "vs-dark" : "vs"}
-                                />
+                                {problem.type === 'ANSWERS' ?
+                                    <Box sx={{width: "100%", maxWidth: 600, mx: "auto", my: 2}}>
+                                        <Typography variant="h6" gutterBottom>
+                                            Выберите правильные ответы:
+                                        </Typography>
+                                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                            {problem.answers.map((answer) => (
+                                                <Card
+                                                    key={answer.id}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        borderColor: selectedAnswers.includes(answer.id) ? "primary.main" : "divider",
+                                                        bgcolor: selectedAnswers.includes(answer.id) ? "action.selected" : "background.paper",
+                                                        transition: "all 0.2s",
+                                                        "&:hover": {
+                                                            borderColor: "primary.main",
+                                                            bgcolor: "action.hover",
+                                                        },
+                                                    }}
+                                                >
+                                                    <CardContent sx={{py: 1, px: 2, "&:last-child": {pb: 1}}}>
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={selectedAnswers.includes(answer.id)}
+                                                                    onChange={() => handleAnswerSelect(answer.id)}
+                                                                    color="primary"
+                                                                />
+                                                            }
+                                                            label={
+                                                                <Typography variant="body1" color="text.primary">
+                                                                    #{answer.id} - {answer.value}
+                                                                </Typography>
+                                                            }
+                                                            sx={{width: "100%", m: 0}}
+                                                        />
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                    :
+                                    <Editor
+                                        language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
+                                        value={code}
+                                        onChange={(value) => setCode(value || '')}
+                                        options={{
+                                            minimap: {enabled: false},
+                                            fontSize: 14,
+                                        }}
+                                        height="100%"
+                                        width="100%"
+                                        theme={mode === 'dark' ? "vs-dark" : "vs"}
+                                    />
+                                }
                             </Box>
                         </Box>
                     )}
@@ -202,7 +274,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             ) : (
                 <Grid container height="100vh">
                     {/* Левая часть: условия задачи */}
-                    <Grid item xs={5} sx={{ overflowY: 'auto', borderRight: '1px solid #eee', p: 3, width: '40%' }}>
+                    <Grid item xs={5} sx={{overflowY: 'auto', borderRight: '1px solid #eee', p: 3, width: '40%'}}>
                         <Typography variant="h4" gutterBottom>
                             {problem.title}
                         </Typography>
@@ -211,7 +283,14 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             color={getDifficultyColor(problem.difficulty)}
                             size="small"
                         />
-                        <MarkdownContent content={problem.description} mode={mode} showToc={false} />
+                        <MarkdownContent content={problem.description} mode={mode} showToc={false}/>
+
+                        {problem.type === 'CODE' &&
+                            <>
+                                <ProblemLimitsCard problem={problem}/>
+                                <div style={{height: "10px"}}/>
+                            </>
+                        }
 
                         <ProblemTabs
                             problem={problem}
@@ -234,48 +313,100 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                         }}
                     >
                         <Box display="flex" alignItems="center" mb={2}>
-                            <FormControl sx={{ minWidth: 120, mr: 2 }}>
-                                <InputLabel id="language-select-label">Язык</InputLabel>
-                                <Select
-                                    labelId="language-select-label"
-                                    value={selectedLanguage}
-                                    label="Язык"
-                                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                                >
-                                    {languages.map((lang) => (
-                                        <MenuItem key={lang.id} value={lang.id}>
-                                            {lang.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            {problem.type === 'CODE' &&
+                                <FormControl sx={{minWidth: 120, mr: 2}}>
+                                    <InputLabel id="language-select-label">Язык</InputLabel>
+                                    <Select
+                                        labelId="language-select-label"
+                                        value={selectedLanguage}
+                                        label="Язык"
+                                        onChange={(e) => setSelectedLanguage(e.target.value)}
+                                    >
+                                        {languages.map((lang) => (
+                                            <MenuItem key={lang.id} value={lang.id}>
+                                                {lang.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            }
                             <Button variant="contained" color="primary" onClick={handleSubmit}>
                                 Отправить
                             </Button>
+
+                            {problem.type === 'INPUT' &&
+                                <>
+                                    <div style={{width: '10px'}}/>
+                                    Напишите ответ
+                                </>
+                            }
                         </Box>
 
                         <Box
                             sx={{
                                 height: '85%',
-                                border: '1px solid #ccc',
+                                border: problem.type === 'ANSWERS' ? '0px solid #ccc' : '1px solid #ccc',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}
                         >
-                            <Editor
-                                language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
-                                value={code}
-                                onChange={(value) => setCode(value || '')}
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                }}
-                                height="100%"
-                                width="100%"
-                                theme={mode === 'dark' ? "vs-dark" : "vs"}
-                            />
+                            {problem.type === 'ANSWERS' ?
+                                <Box sx={{width: "100%", maxWidth: 600, mx: "auto", my: 2}}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Выберите правильные ответы:
+                                    </Typography>
+                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                        {problem.answers.map((answer) => (
+                                            <Card
+                                                key={answer.id}
+                                                variant="outlined"
+                                                sx={{
+                                                    borderColor: selectedAnswers.includes(answer.id) ? "primary.main" : "divider",
+                                                    bgcolor: selectedAnswers.includes(answer.id) ? "action.selected" : "background.paper",
+                                                    transition: "all 0.2s",
+                                                    "&:hover": {
+                                                        borderColor: "primary.main",
+                                                        bgcolor: "action.hover",
+                                                    },
+                                                }}
+                                            >
+                                                <CardContent sx={{py: 1, px: 2, "&:last-child": {pb: 1}}}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox
+                                                                checked={selectedAnswers.includes(answer.id)}
+                                                                onChange={() => handleAnswerSelect(answer.id)}
+                                                                color="primary"
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Typography variant="body1" color="text.primary">
+                                                                #{answer.id} - {answer.value}
+                                                            </Typography>
+                                                        }
+                                                        sx={{width: "100%", m: 0}}
+                                                    />
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </Box>
+                                </Box>
+                                :
+                                <Editor
+                                    language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
+                                    value={code}
+                                    onChange={(value) => setCode(value || '')}
+                                    options={{
+                                        minimap: {enabled: false},
+                                        fontSize: 14,
+                                    }}
+                                    height="100%"
+                                    width="100%"
+                                    theme={mode === 'dark' ? "vs-dark" : "vs"}
+                                />
+                            }
                         </Box>
                     </Grid>
                 </Grid>

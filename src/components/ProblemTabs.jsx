@@ -13,57 +13,67 @@ import {
 function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
     const [tabIndex, setTabIndex] = useState(0);
 
+    // Определяем доступные вкладки
+    const availableTabs = [];
+    if (problem.testCases.length > 0) availableTabs.push('Примеры');
+    if (submissions.length > 0) availableTabs.push('Отправки');
+
     const handleChange = (event, newIndex) => {
         setTabIndex(newIndex);
     };
 
+    // Получаем текущую активную вкладку по индексу
+    const currentTab = availableTabs[tabIndex];
+
     return (
         <Box sx={{ width: '100%' }}>
-            <Tabs
-                value={tabIndex}
-                onChange={handleChange}
-                aria-label="problem tabs"
-                variant="fullWidth"
-                textColor="inherit"
-                sx={{
-                    borderRadius: 2,
-                    bgcolor: 'background.default',
-                    boxShadow: 1,
-                    '& .MuiTabs-indicator': {
-                        height: 4,
+            { availableTabs.length > 0 &&
+                <Tabs
+                    value={tabIndex}
+                    onChange={handleChange}
+                    aria-label="problem tabs"
+                    variant="fullWidth"
+                    textColor="inherit"
+                    sx={{
                         borderRadius: 2,
-                        backgroundColor: '#fff',
-                    },
-                    '& .MuiTab-root': {
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        fontSize: '1rem',
-                        color: 'rgba(255,255,255,0.7)',
-                        transition: 'color 0.3s ease',
-                        '&:hover': {
-                            color: '#fff',
-                            opacity: 1,
+                        bgcolor: 'background.default',
+                        boxShadow: 1,
+                        '& .MuiTabs-indicator': {
+                            height: 4,
+                            borderRadius: 2,
+                            backgroundColor: '#fff',
                         },
-                        px: 3,
-                        py: 1.5,
-                        minHeight: 48,
-                        borderRadius: 2,
-                    },
-                    '& .Mui-selected': {
-                        color: '#fff',
-                        fontWeight: 600,
-                        backgroundColor: 'transparent',
-                        boxShadow: 'none',
-                    },
-                }}
-            >
-                <Tab label="Примеры" />
-                <Tab label="Отправки" />
-            </Tabs>
-
+                        '& .MuiTab-root': {
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            fontSize: '1rem',
+                            color: 'rgba(255,255,255,0.7)',
+                            transition: 'color 0.3s ease',
+                            '&:hover': {
+                                color: '#fff',
+                                opacity: 1,
+                            },
+                            px: 3,
+                            py: 1.5,
+                            minHeight: 48,
+                            borderRadius: 2,
+                        },
+                        '& .Mui-selected': {
+                            color: '#fff',
+                            fontWeight: 600,
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                        },
+                    }}
+                >
+                    {availableTabs.map((tab, index) => (
+                        <Tab key={index} label={tab} />
+                    ))}
+                </Tabs>
+            }
 
             <Box sx={{ mt: 2 }}>
-                {tabIndex === 0 && (
+                {currentTab === 'Примеры' && (
                     <Box>
                         {problem.testCases.map((testCase, index) => (
                             <Paper
@@ -124,7 +134,7 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
                     </Box>
                 )}
 
-                {tabIndex === 1 && (
+                {currentTab === 'Отправки' && (
                     <Box>
                         {submissions.map((s) => (
                             <Paper

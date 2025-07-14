@@ -169,9 +169,6 @@ export const ArticlesDetailsPage = ({mode}) => {
                             <Typography variant="h5" component="div">
                                 {problem.title}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{mt: 1, mb: 2}}>
-                                {problem.description.split('\n')[0]}
-                            </Typography>
                             <Chip
                                 label={difficultyTranslation[problem.difficulty]}
                                 color={getDifficultyColor(problem.difficulty)}

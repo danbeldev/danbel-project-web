@@ -26,7 +26,8 @@ const SignInPage = () => {
         setLoading(true);
         try {
             await ApiService.signIn(username, password);
-            navigate('/articles'); // или на профиль, если нужно
+            navigate('/articles');
+            window.location.reload();
         } catch (err) {
             setError(typeof err === 'string' ? err : 'Ошибка входа');
         } finally {
