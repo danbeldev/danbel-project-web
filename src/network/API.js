@@ -1,4 +1,5 @@
 import axios from 'axios';
+import EvaluationDisplay from "../components/EvaluationDisplay";
 
 // Create axios instance
 const api = axios.create({
@@ -261,6 +262,22 @@ const ApiService = {
             throw error.response?.data || error.message;
         }
     },
+    getEvaluation: async (articleId) => {
+        try {
+            const response = await api.get(`/users/evaluation?articleId=${articleId}`);
+            return response.data;
+        } catch (error) {
+            // throw error.response?.data || error.message;
+        }
+    },
+    getEvaluations: async () => {
+        try {
+            const response = await api.get(`/users/evaluations`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    }
 };
 
 export default ApiService;

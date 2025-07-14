@@ -16,6 +16,7 @@ import ApiService from '../network/API';
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import MarkdownContent from "../components/MarkdownContent";
+import EvaluationDisplay from "../components/EvaluationDisplay";
 
 export const difficultyTranslation = {
     EASY: 'Лёгкая',
@@ -51,6 +52,8 @@ export const ArticlesDetailsPage = ({mode}) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [evaluation, setEvaluation] = useState(null);
+
     useEffect(() => {
         const fetchArticle = async () => {
             try {
@@ -61,6 +64,8 @@ export const ArticlesDetailsPage = ({mode}) => {
                 setProblems(probData.sort((a, b) => {
                     return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
                 }));
+
+                setEvaluation(await ApiService.getEvaluation(id))
             } catch (err) {
                 setError(err.message || 'Ошибка загрузки статьи');
             } finally {
@@ -149,6 +154,10 @@ export const ArticlesDetailsPage = ({mode}) => {
                           onClick={() => navigate(`/tags/${tag.id}`)}/>
                 ))}
             </Box>
+
+            {evaluation &&
+                <EvaluationDisplay value={evaluation.evaluation}/>
+            }
 
             <Divider sx={{my: 3}}/>
 
