@@ -272,7 +272,7 @@ const ApiService = {
     },
     getEvaluations: async () => {
         try {
-            const response = await api.get(`/users/evaluations`);
+            const response = await api.get(`/users/evaluations/by-group-tags`);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

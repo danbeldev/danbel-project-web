@@ -5,7 +5,10 @@ import {
     Container,
     Typography,
     Grid,
-    CircularProgress
+    CircularProgress,
+    Tabs,
+    Tab,
+    Chip
 } from '@mui/material';
 import ApiService from '../network/API';
 import EvaluationList from '../components/EvaluationList';
@@ -13,21 +16,36 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 export const ProfilePage = () => {
-    const [evaluations, setEvaluations] = useState([]);
+    const [evaluationsData, setEvaluationsData] = useState([]);
     const [profile, setProfile] = useState(null);
+    const [currentTag, setCurrentTag] = useState(null);
 
     useEffect(() => {
-        ApiService.getEvaluations().then((res) => setEvaluations(res));
+        ApiService.getEvaluations().then((res) => {
+            setEvaluationsData(res);
+            if (res.length > 0) {
+                setCurrentTag(res[0].tag);
+            }
+        });
         ApiService.getMeUser().then((res) => setProfile(res));
     }, []);
 
-    if (!profile) {
+    const handleTagChange = (event, newValue) => {
+        const selectedTag = evaluationsData.find(item => item.tag.id === newValue)?.tag;
+        setCurrentTag(selectedTag);
+    };
+
+    if (!profile || evaluationsData.length === 0) {
         return (
             <Box display="flex" justifyContent="center" py={10}>
                 <CircularProgress />
             </Box>
         );
     }
+
+    const currentEvaluations = evaluationsData.find(item =>
+        item.tag.id === currentTag?.id
+    )?.evaluations || [];
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -76,12 +94,70 @@ export const ProfilePage = () => {
                 </Box>
             </Box>
 
-            <Typography variant="h6" fontWeight="medium" gutterBottom>
-                Оценки
-            </Typography>
+            {/* Tabs for tags */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs
+                    value={currentTag?.id || false}
+                    onChange={handleTagChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    textColor="inherit"
+                    sx={{
+                        borderRadius: 2,
+                        bgcolor: 'background.default',
+                        boxShadow: 1,
+                        '& .MuiTabs-indicator': {
+                            height: 4,
+                            borderRadius: 2,
+                            backgroundColor: '#fff',
+                        },
+                        '& .MuiTab-root': {
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            fontSize: '1rem',
+                            color: 'rgba(255,255,255,0.7)',
+                            transition: 'color 0.3s ease',
+                            '&:hover': {
+                                color: '#fff',
+                                opacity: 1,
+                            },
+                            px: 3,
+                            py: 1.5,
+                            minHeight: 48,
+                            borderRadius: 2,
+                        },
+                        '& .Mui-selected': {
+                            color: '#fff',
+                            fontWeight: 600,
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                        },
+                    }}
+                >
+                    {evaluationsData.map((item) => (
+                        <Tab
+                            key={item.tag.id}
+                            label={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    {item.tag.name}
+                                    {item.exam && (
+                                        <Chip
+                                            label="Экзамен"
+                                            size="small"
+                                            color="primary"
+                                            variant="outlined"
+                                        />
+                                    )}
+                                </Box>
+                            }
+                            value={item.tag.id}
+                        />
+                    ))}
+                </Tabs>
+            </Box>
 
             <Box width="100%" maxWidth="1000px" mx="auto">
-                <EvaluationList items={evaluations} />
+                <EvaluationList items={currentEvaluations} />
             </Box>
         </Container>
     );
