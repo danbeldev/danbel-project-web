@@ -171,7 +171,11 @@ export const ArticlesDetailsPage = ({mode}) => {
                     <Card
                         key={problem.id} sx={{mb: 2, cursor: 'pointer'}}
                         onClick={() => {
-                            navigate(`/problems/${problem.id}`);
+                            if (localStorage.getItem('accessToken')) {
+                                navigate(`/problems/${problem.id}`);
+                            }else {
+                                navigate(`/sign-in`);
+                            }
                         }}
                     >
                         <CardContent>

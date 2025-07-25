@@ -54,9 +54,7 @@ export const Header = ({ mode, toggleTheme }) => {
 
     const handleLogout = () => {
 
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userRole');
+        ApiService.logout();
 
         setUser(null);
         setAnchorEl(null);
