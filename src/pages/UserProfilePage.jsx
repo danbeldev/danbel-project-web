@@ -11,6 +11,7 @@ import {
 import {format} from 'date-fns';
 import ApiService from '../network/API';
 import ArticleList from "../components/ArticleList";
+import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
 
 const UserProfilePage = () => {
     const {id} = useParams();
@@ -84,9 +85,17 @@ const UserProfilePage = () => {
                 </Stack>
             </Box>
 
-            <div style={{height: "40px"}}/>
+            <div style={{height: "20px"}}/>
+
+            <YandexBannerAd/>
+
+            <div style={{height: "20px"}}/>
 
             <ArticleList tagIds={[]} authorIds={[id]}/>
+
+            <div style={{height: "10px"}}/>
+
+            <YandexTapeAd/>
         </Container>
     );
 };

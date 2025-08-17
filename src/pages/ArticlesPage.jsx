@@ -3,6 +3,7 @@ import {
     Container,
 } from '@mui/material';
 import ArticleList from "../components/ArticleList";
+import YandexBannerAd from "../components/YandexBannerAd";
 
 export const ArticlesPage = () => {
 
@@ -12,6 +13,10 @@ export const ArticlesPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{py: 4}}>
+            <YandexBannerAd/>
+
+            <div style={{height:'10px'}}/>
+
             <ArticleList tagIds={[]} authorIds={[]}/>
         </Container>
     );

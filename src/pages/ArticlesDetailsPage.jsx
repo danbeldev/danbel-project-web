@@ -17,6 +17,7 @@ import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import MarkdownContent from "../components/MarkdownContent";
 import EvaluationDisplay from "../components/EvaluationDisplay";
+import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
 
 export const difficultyTranslation = {
     EASY: 'Лёгкая',
@@ -159,13 +160,27 @@ export const ArticlesDetailsPage = ({mode}) => {
                 <EvaluationDisplay value={evaluation.evaluation}/>
             }
 
+            <div style={{height:'5px'}}/>
+
+            <YandexBannerAd/>
+
+            <div style={{height:'5px'}}/>
+
             <Divider sx={{my: 3}}/>
 
             <MarkdownContent content={article.content} mode={mode}/>
 
             <div>
                 {problems.length > 0 &&
-                    <h1>Задания</h1>
+                    <>
+                        <div style={{height:'5px'}}/>
+
+                        <YandexBannerAd/>
+
+                        <div style={{height:'5px'}}/>
+
+                        <h1>Задания</h1>
+                    </>
                 }
                 {problems.map((problem) => (
                     <Card
@@ -191,6 +206,10 @@ export const ArticlesDetailsPage = ({mode}) => {
                     </Card>
                 ))}
             </div>
+
+            <div style={{height: '5px'}}/>
+
+            <YandexTapeAd/>
         </Container>
     );
 };

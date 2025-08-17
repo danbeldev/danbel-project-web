@@ -14,6 +14,7 @@ import ApiService from '../network/API';
 import EvaluationList from '../components/EvaluationList';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import YandexBannerAd from "../components/YandexBannerAd";
 
 export const ProfilePage = () => {
     const [evaluationsData, setEvaluationsData] = useState([]);
@@ -93,6 +94,12 @@ export const ProfilePage = () => {
                     </Grid>
                 </Box>
             </Box>
+
+            <div style={{height: "10px"}}/>
+
+            <YandexBannerAd/>
+
+            <div style={{height: "10px"}}/>
 
             {/* Tabs for tags */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     Tabs,
     Tab,
@@ -7,11 +7,18 @@ import {
     Stack,
     Typography,
     Divider,
-    Chip,
+    Chip, IconButton, CircularProgress,
 } from '@mui/material';
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ApiService from "../network/API";
+import YandexBannerAd from "./YandexBannerAd";
 
-function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function ProblemTabs({problem, submissions, handleSubmissionClick, updateSubmission}) {
     const [tabIndex, setTabIndex] = useState(0);
+
+    const [loading, setLoading] = useState(false);
 
     // Определяем доступные вкладки
     const availableTabs = [];
@@ -25,9 +32,24 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
     // Получаем текущую активную вкладку по индексу
     const currentTab = availableTabs[tabIndex];
 
+    const onRefreshClick = async (e, id, index) => {
+        e.stopPropagation();
+        setLoading(true);
+        try {
+            const update = await ApiService.getSubmissionShort(id)
+            updateSubmission(update, index)
+            await sleep(4000);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <Box sx={{ width: '100%' }}>
-            { availableTabs.length > 0 &&
+        <Box sx={{width: '100%'}}>
+
+            <YandexBannerAd/>
+
+            {availableTabs.length > 0 &&
                 <Tabs
                     value={tabIndex}
                     onChange={handleChange}
@@ -67,12 +89,12 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
                     }}
                 >
                     {availableTabs.map((tab, index) => (
-                        <Tab key={index} label={tab} />
+                        <Tab key={index} label={tab}/>
                     ))}
                 </Tabs>
             }
 
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{mt: 2}}>
                 {currentTab === 'Примеры' && (
                     <Box>
                         {problem.testCases.map((testCase, index) => (
@@ -109,7 +131,7 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
                                         </Paper>
                                     </Box>
 
-                                    <Divider />
+                                    <Divider/>
 
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight="medium" gutterBottom>
@@ -136,14 +158,14 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
 
                 {currentTab === 'Отправки' && (
                     <Box>
-                        {submissions.map((s) => (
+                        {submissions.map((s, index) => (
                             <Paper
                                 key={s.id}
                                 sx={{
                                     p: 1.5,
                                     my: 1,
-                                    cursor: 'pointer',
-                                    '&:hover': { backgroundColor: '#232323' },
+                                    cursor: "pointer",
+                                    "&:hover": {backgroundColor: "#232323"},
                                 }}
                                 onClick={() => handleSubmissionClick(s.id)}
                             >
@@ -151,16 +173,33 @@ function ProblemTabs({ problem, submissions, handleSubmissionClick }) {
                                     <Typography>
                                         #{s.id} • {s.language.name}
                                     </Typography>
-                                    <Chip
-                                        label={s.status}
-                                        size="small"
-                                        color={
-                                            s.status === 'SUCCESS' ? 'success' :
-                                                s.status === 'FAILED' ? 'error' :
-                                                    'default'
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <Chip
+                                            label={s.status}
+                                            size="small"
+                                            color={
+                                                s.status === "SUCCESS"
+                                                    ? "success"
+                                                    : s.status === "FAILED"
+                                                        ? "error"
+                                                        : "default"
+                                            }
+                                            variant="outlined"
+                                        />
+                                        {(s.status === "PENDING" || s.status === "RUNNING") &&
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => onRefreshClick(e, s.id, index)}
+                                                disabled={loading}
+                                            >
+                                                {loading ? (
+                                                    <CircularProgress size={20}/>
+                                                ) : (
+                                                    <RefreshIcon/>
+                                                )}
+                                            </IconButton>
                                         }
-                                        variant="outlined"
-                                    />
+                                    </Box>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary">
                                     {new Date(s.createdAt).toLocaleString()}

@@ -17,7 +17,7 @@ import {
     Brightness4,
     Brightness7,
     Code,
-    Menu as MenuIcon, AccountCircle
+    Menu as MenuIcon, AccountCircle, KeyboardArrowUp
 } from '@mui/icons-material';
 import ApiService from '../network/API';
 import {Link, useNavigate} from 'react-router-dom';
@@ -243,22 +243,13 @@ export const Header = ({ mode, toggleTheme }) => {
                             <Box>
                                 <Button
                                     color="inherit"
-                                    endIcon={<ExpandMore />}
-                                    onClick={handleMenuOpen(setAnchorElLocation)}
+                                    onClick={() => {
+                                        window.open('https://github.com/danbeldev', '_blank');
+                                    }}
                                     sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                    Где я?
+                                    GitHub
                                 </Button>
-                                <Menu
-                                    anchorEl={anchorElLocation}
-                                    open={Boolean(anchorElLocation)}
-                                    onClose={handleMenuClose(setAnchorElLocation)}
-                                >
-                                    <MenuItem onClick={() => {
-                                        window.open('https://github.com/danbeldev', '_blank');
-                                        handleMenuClose(setAnchorElLocation)
-                                    }}>GitHub</MenuItem>
-                                </Menu>
                             </Box>
                         </Box>
                     ) : (
@@ -373,15 +364,15 @@ export const Header = ({ mode, toggleTheme }) => {
                     )}
 
                     {/* Переключатель темы (виден на всех устройствах) */}
-                    <Tooltip title="Сменить тему">
-                        <IconButton
-                            onClick={toggleTheme}
-                            color="inherit"
-                            size={isMobile ? "small" : "medium"}
-                        >
-                            {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
-                        </IconButton>
-                    </Tooltip>
+                    {/*<Tooltip title="Сменить тему">*/}
+                    {/*    <IconButton*/}
+                    {/*        onClick={toggleTheme}*/}
+                    {/*        color="inherit"*/}
+                    {/*        size={isMobile ? "small" : "medium"}*/}
+                    {/*    >*/}
+                    {/*        {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}*/}
+                    {/*    </IconButton>*/}
+                    {/*</Tooltip>*/}
                 </Box>
             </Toolbar>
         </AppBar>

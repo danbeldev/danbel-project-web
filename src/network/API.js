@@ -238,6 +238,14 @@ const ApiService = {
             throw error.response?.data || error.message;
         }
     },
+    getSubmissionShort: async (submissionId) => {
+        try {
+            const response = await api.get(`/problems/submissions/${submissionId}/short`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
     getSubmissionDetails: async (submissionId) => {
         try {
             const response = await api.get(`/problems/submissions/${submissionId}`);

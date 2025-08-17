@@ -22,6 +22,7 @@ import MarkdownContent from "../components/MarkdownContent";
 import SubmissionDetailsDialog from "../components/SubmissionDetailsDialog";
 import ProblemTabs from "../components/ProblemTabs";
 import ProblemLimitsCard from "../components/ProblemLimitsCard";
+import YandexBannerAd from "../components/YandexBannerAd";
 
 export const ProblemCodeDetailsPage = ({mode}) => {
     const {problemId} = useParams();
@@ -89,6 +90,14 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             } else {
                 return [...prev, answerId];
             }
+        });
+    };
+
+    const updateSubmission = (update, index) => {
+        setSubmissions(prev => {
+            const copy = [...prev];
+            copy[index] = update
+            return copy;
         });
     };
 
@@ -165,6 +174,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                 problem={problem}
                                 submissions={submissions}
                                 handleSubmissionClick={handleSubmissionClick}
+                                updateSubmission={updateSubmission}
                             />
                         </Box>
                     )}
@@ -296,6 +306,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             problem={problem}
                             submissions={submissions}
                             handleSubmissionClick={handleSubmissionClick}
+                            updateSubmission={updateSubmission}
                         />
                     </Grid>
 

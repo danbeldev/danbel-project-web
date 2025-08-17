@@ -3,11 +3,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import {Box, Typography, List, Link, Divider, ListItemButton} from '@mui/material';
-import YandexAd from './YandexAd';
+import YandexBannerAd from './YandexBannerAd';
 import {BookOpenText} from 'lucide-react';
 
 const COMPONENT_PLACEHOLDERS = {
-    '{{YandexAd}}': <YandexAd/>,
+    '{{YandexAd}}': <YandexBannerAd/>,
 };
 
 function extractHeadings(markdown) {
@@ -125,7 +125,7 @@ const MarkdownContent = ({content, mode, showToc = true}) => {
                                     h6: ({node, ...props}) => {
                                         const slug = props.children.toString().toLowerCase().replace(/[^\w]+/g, '-');
                                         return <h6 id={slug} {...props} />;
-                                    },
+                                    }
                                 }}
                             >
                                 {part}

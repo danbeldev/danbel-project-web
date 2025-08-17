@@ -13,6 +13,7 @@ import CreateArticlePage from "./pages/CreateArticlePage";
 import SignInPage from "./pages/SignInPage";
 import {ProblemCodeDetailsPage} from "./pages/ProblemCodeDetailsPage";
 import {ProfilePage} from "./pages/ProfilePage";
+import YandexBannerAd from "./components/YandexBannerAd";
 
 const getDesignTokens = (mode) => ({
     palette: {
@@ -135,7 +136,7 @@ function App() {
                     minHeight="100vh"
                 >
                     <Header mode={mode} toggleTheme={toggleTheme} />
-
+                    
                     <Box flexGrow={1}>
                         <Routes>
                             <Route path="/articles" element={<ArticlesPage />} />
