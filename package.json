@@ -16,6 +16,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.12",
     "highlight.js": "^11.11.1",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",

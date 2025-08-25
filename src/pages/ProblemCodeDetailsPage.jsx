@@ -5,14 +5,13 @@ import {
     Typography,
     Select,
     MenuItem,
-    Button,
     FormControl,
     InputLabel,
     Chip,
     useTheme,
     useMediaQuery,
     Tabs,
-    Tab, Checkbox, Card, CardContent, FormControlLabel
+    Tab, Checkbox, Card, CardContent, FormControlLabel, Stack
 } from '@mui/material';
 import {useParams} from 'react-router-dom';
 import {Editor} from '@monaco-editor/react';
@@ -22,7 +21,8 @@ import MarkdownContent from "../components/MarkdownContent";
 import SubmissionDetailsDialog from "../components/SubmissionDetailsDialog";
 import ProblemTabs from "../components/ProblemTabs";
 import ProblemLimitsCard from "../components/ProblemLimitsCard";
-import YandexBannerAd from "../components/YandexBannerAd";
+import {SubmitSection} from "../components/SubmitSection";
+import SubmitStatusChip from "../components/SubmitStatusChip";
 
 export const ProblemCodeDetailsPage = ({mode}) => {
     const {problemId} = useParams();
@@ -155,12 +155,18 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             <Typography variant="h5" gutterBottom>
                                 {problem.title}
                             </Typography>
-                            <Chip
-                                label={difficultyTranslation[problem.difficulty]}
-                                color={getDifficultyColor(problem.difficulty)}
-                                size="small"
-                                sx={{mb: 2}}
-                            />
+
+                            <Stack direction="row" spacing={1}>
+                                <Chip
+                                    label={difficultyTranslation[problem.difficulty]}
+                                    color={getDifficultyColor(problem.difficulty)}
+                                    size="small"
+                                    sx={{mb: 2}}
+                                />
+
+                                <SubmitStatusChip submitSuccess={problem.submitSuccess}/>
+                            </Stack>
+
                             <MarkdownContent content={problem.description} mode={mode} showToc={false}/>
 
                             {problem.type === 'CODE' &&
@@ -204,15 +210,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     </Select>
                                 </FormControl>
                             }
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                color="primary"
-                                onClick={handleSubmit}
-                                sx={{mb: 2}}
-                            >
-                                Отправить
-                            </Button>
+
+                            <SubmitSection problem={problem} handleSubmit={handleSubmit} />
 
                             <Box
                                 sx={{
@@ -288,11 +287,16 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                         <Typography variant="h4" gutterBottom>
                             {problem.title}
                         </Typography>
-                        <Chip
-                            label={difficultyTranslation[problem.difficulty]}
-                            color={getDifficultyColor(problem.difficulty)}
-                            size="small"
-                        />
+
+                        <Stack direction="row" spacing={1}>
+                            <Chip
+                                label={difficultyTranslation[problem.difficulty]}
+                                color={getDifficultyColor(problem.difficulty)}
+                                size="small"
+                            />
+                            <SubmitStatusChip submitSuccess={problem.submitSuccess}/>
+                        </Stack>
+
                         <MarkdownContent content={problem.description} mode={mode} showToc={false}/>
 
                         {problem.type === 'CODE' &&
@@ -341,9 +345,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     </Select>
                                 </FormControl>
                             }
-                            <Button variant="contained" color="primary" onClick={handleSubmit}>
-                                Отправить
-                            </Button>
+
+                            <SubmitSection problem={problem} handleSubmit={handleSubmit} />
 
                             {problem.type === 'INPUT' &&
                                 <>

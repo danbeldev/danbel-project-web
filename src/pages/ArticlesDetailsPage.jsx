@@ -18,6 +18,7 @@ import 'highlight.js/styles/github-dark.css';
 import MarkdownContent from "../components/MarkdownContent";
 import EvaluationDisplay from "../components/EvaluationDisplay";
 import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
+import SubmitStatusChip from "../components/SubmitStatusChip";
 
 export const difficultyTranslation = {
     EASY: 'Лёгкая',
@@ -160,11 +161,11 @@ export const ArticlesDetailsPage = ({mode}) => {
                 <EvaluationDisplay value={evaluation.evaluation}/>
             }
 
-            <div style={{height:'5px'}}/>
+            <div style={{height: '5px'}}/>
 
             <YandexBannerAd/>
 
-            <div style={{height:'5px'}}/>
+            <div style={{height: '5px'}}/>
 
             <Divider sx={{my: 3}}/>
 
@@ -173,11 +174,11 @@ export const ArticlesDetailsPage = ({mode}) => {
             <div>
                 {problems.length > 0 &&
                     <>
-                        <div style={{height:'5px'}}/>
+                        <div style={{height: '5px'}}/>
 
                         <YandexBannerAd/>
 
-                        <div style={{height:'5px'}}/>
+                        <div style={{height: '5px'}}/>
 
                         <h1>Задания</h1>
                     </>
@@ -188,7 +189,7 @@ export const ArticlesDetailsPage = ({mode}) => {
                         onClick={() => {
                             if (localStorage.getItem('accessToken')) {
                                 navigate(`/problems/${problem.id}`);
-                            }else {
+                            } else {
                                 navigate(`/sign-in`);
                             }
                         }}
@@ -197,11 +198,16 @@ export const ArticlesDetailsPage = ({mode}) => {
                             <Typography variant="h5" component="div">
                                 {problem.title}
                             </Typography>
-                            <Chip
-                                label={difficultyTranslation[problem.difficulty]}
-                                color={getDifficultyColor(problem.difficulty)}
-                                size="small"
-                            />
+
+                            <Stack direction="row" spacing={1}>
+                                <Chip
+                                    label={difficultyTranslation[problem.difficulty]}
+                                    color={getDifficultyColor(problem.difficulty)}
+                                    size="small"
+                                />
+
+                                <SubmitStatusChip submitSuccess={problem.submitSuccess}/>
+                            </Stack>
                         </CardContent>
                     </Card>
                 ))}
