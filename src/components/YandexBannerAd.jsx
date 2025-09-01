@@ -5,14 +5,14 @@ const YandexBannerAd = () => {
         if (window.yaContextCb) {
             window.yaContextCb.push(() => {
                 window.Ya.Context.AdvManager.render({
-                    blockId: "R-A-16645456-1", // ⚡️ твой ID блока
-                    renderTo: "yandex_rtb_R-A-16645456-1",
+                    "blockId": "R-A-16971244-1",
+                    "renderTo": "yandex_rtb_R-A-16971244-1"
                 });
             });
         }
     }, []);
 
-    return <div id="yandex_rtb_R-A-16645456-1"/>;
+    return <div id="yandex_rtb_R-A-16971244-1"/>;
 };
 
 export const YandexTapeAd = () => {
@@ -20,15 +20,15 @@ export const YandexTapeAd = () => {
         if (window.yaContextCb) {
             window.yaContextCb.push(() => {
                 window.Ya.Context.AdvManager.render({
-                    "blockId": "R-A-16645456-2",
-                    "renderTo": "yandex_rtb_R-A-16645456-2",
+                    "blockId": "R-A-16971244-2",
+                    "renderTo": "yandex_rtb_R-A-16971244-2",
                     "type": "feed"
                 })
             })
         }
     }, []);
 
-    return <div id="yandex_rtb_R-A-16645456-2"/>;
+    return <div id="yandex_rtb_R-A-16971244-2"/>;
 }
 
 export const YandexBottomAd = () => {
@@ -36,7 +36,7 @@ export const YandexBottomAd = () => {
         if (window.yaContextCb) {
             window.yaContextCb.push(() => {
                 window.Ya.Context.AdvManager.render({
-                    "blockId": "R-A-16645456-3",
+                    "blockId": "R-A-16971244-4",
                     "type": "floorAd",
                     "platform": "touch"
                 })

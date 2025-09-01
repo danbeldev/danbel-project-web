@@ -8,12 +8,10 @@ import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import {ArticlesDetailsPage} from "./pages/ArticlesDetailsPage";
 import TagDetailsPage from "./pages/TagDetailsPage";
 import UserProfilePage from "./pages/UserProfilePage";
-import Footer from "./components/Footer";
 import CreateArticlePage from "./pages/CreateArticlePage";
 import SignInPage from "./pages/SignInPage";
 import {ProblemCodeDetailsPage} from "./pages/ProblemCodeDetailsPage";
 import {ProfilePage} from "./pages/ProfilePage";
-import YandexBannerAd from "./components/YandexBannerAd";
 
 const getDesignTokens = (mode) => ({
     palette: {

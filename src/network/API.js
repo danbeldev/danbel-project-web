@@ -1,9 +1,8 @@
 import axios from 'axios';
-import EvaluationDisplay from "../components/EvaluationDisplay";
 
 // Create axios instance
 const api = axios.create({
-    baseURL: 'https://map.matstart.ru:30/danbel-project-api',
+    baseURL: 'https://api.pgk.danbel.ru/danbel-project-api',
 });
 
 // Request interceptor to add auth token to headers

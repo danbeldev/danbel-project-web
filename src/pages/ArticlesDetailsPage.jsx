@@ -19,6 +19,7 @@ import MarkdownContent from "../components/MarkdownContent";
 import EvaluationDisplay from "../components/EvaluationDisplay";
 import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
 import SubmitStatusChip from "../components/SubmitStatusChip";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 export const difficultyTranslation = {
     EASY: 'Лёгкая',
@@ -69,7 +70,7 @@ export const ArticlesDetailsPage = ({mode}) => {
 
                 setEvaluation(await ApiService.getEvaluation(id))
             } catch (err) {
-                setError(err.message || 'Ошибка загрузки статьи');
+                setError(err?.reason || 'Ошибка загрузки статьи');
             } finally {
                 setLoading(false);
             }
@@ -96,8 +97,13 @@ export const ArticlesDetailsPage = ({mode}) => {
 
     if (error) {
         return (
-            <Box display="flex" justifyContent="center" mt={4}>
-                <Typography color="error">{error}</Typography>
+            <Box display="flex" justifyContent="center" mt={4} px={2}>
+                <Card sx={{ bgcolor: "#fdecea", color: "#611a15", borderRadius: 2, maxWidth: 600, boxShadow: 3 }}>
+                    <CardContent sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <ErrorOutlineIcon color="error" fontSize="large" />
+                        <Typography variant="body1">{error}</Typography>
+                    </CardContent>
+                </Card>
             </Box>
         );
     }
