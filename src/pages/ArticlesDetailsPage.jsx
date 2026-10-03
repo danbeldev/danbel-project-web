@@ -17,9 +17,11 @@ import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import MarkdownContent from "../components/MarkdownContent";
 import EvaluationDisplay from "../components/EvaluationDisplay";
-import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
 import SubmitStatusChip from "../components/SubmitStatusChip";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import YandexAdBlock from "../components/ads/YandexAdBlock";
+
+const FEED_BLOCK_ID = "R-A-20141312-5";
 
 export const difficultyTranslation = {
     EASY: 'Лёгкая',
@@ -114,7 +116,7 @@ export const ArticlesDetailsPage = ({mode}) => {
             {article.coverFileName && (
                 <Box mb={3}>
                     <img
-                        src={`https://map.matstart.ru:30/danbel-project-api/files/${article.coverFileName}`}
+                        src={ApiService.getFileUrl(article.coverFileName)}
                         alt={article.title}
                         style={{width: '100%', borderRadius: 12}}
                     />
@@ -144,7 +146,7 @@ export const ArticlesDetailsPage = ({mode}) => {
                     alt={article.author.username}
                     src={
                         article.author.avatarFileName
-                            ? `https://map.matstart.ru:30/danbel-project-api/files/${article.author.avatarFileName}`
+                            ? ApiService.getFileUrl(article.author.avatarFileName)
                             : undefined
                     }
                     sx={{width: 32, height: 32}}
@@ -167,27 +169,13 @@ export const ArticlesDetailsPage = ({mode}) => {
                 <EvaluationDisplay value={evaluation.evaluation}/>
             }
 
-            <div style={{height: '5px'}}/>
-
-            <YandexBannerAd/>
-
-            <div style={{height: '5px'}}/>
-
             <Divider sx={{my: 3}}/>
 
             <MarkdownContent content={article.content} mode={mode}/>
 
             <div>
                 {problems.length > 0 &&
-                    <>
-                        <div style={{height: '5px'}}/>
-
-                        <YandexBannerAd/>
-
-                        <div style={{height: '5px'}}/>
-
-                        <h1>Задания</h1>
-                    </>
+                    <h1>Задания</h1>
                 }
                 {problems.map((problem) => (
                     <Card
@@ -219,9 +207,7 @@ export const ArticlesDetailsPage = ({mode}) => {
                 ))}
             </div>
 
-            <div style={{height: '5px'}}/>
-
-            <YandexTapeAd/>
+            <YandexAdBlock blockId={FEED_BLOCK_ID} type="feed"/>
         </Container>
     );
 };

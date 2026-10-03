@@ -15,8 +15,18 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Editor } from '@monaco-editor/react';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
+    const isPending = submissionDetail?.status === 'PENDING' || submissionDetail?.status === 'RUNNING';
+    // Пока решение проверяется, закрыть модалку нельзя — ни крестиком, ни кликом
+    // по фону, ни Escape. При обновлении страницы её заново открывает эффект
+    // в ProblemCodeDetailsPage, если последняя отправка ещё не завершена.
+    const handleClose = (event, reason) => {
+        if (isPending) return;
+        onClose(event, reason);
+    };
+
     const renderResult = () => {
         try {
             const resultData = typeof submissionDetail.resultJson === 'string'
@@ -96,7 +106,8 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={handleClose}
+            disableEscapeKeyDown={isPending}
             fullWidth
             maxWidth="md"
             PaperProps={{
@@ -121,20 +132,22 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
                 }}
             >
                 Детали отправки #{submissionDetail?.id}
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{
-                        position: 'absolute',
-                        right: 12,
-                        top: 12,
-                        color: (theme) => theme.palette.text.secondary,
-                        transition: 'color 0.3s ease',
-                        '&:hover': { color: (theme) => theme.palette.text.primary },
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
+                {!isPending && (
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 12,
+                            top: 12,
+                            color: (theme) => theme.palette.text.secondary,
+                            transition: 'color 0.3s ease',
+                            '&:hover': { color: (theme) => theme.palette.text.primary },
+                        }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                )}
             </DialogTitle>
 
             <DialogContent
@@ -166,6 +179,14 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
                                     textTransform: 'uppercase',
                                 }}
                             />
+                            {(submissionDetail.status === 'PENDING' || submissionDetail.status === 'RUNNING') && (
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <CircularProgress size={16} />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Проверяется, обновление каждые 5 секунд…
+                                    </Typography>
+                                </Stack>
+                            )}
                         </Stack>
 
                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -224,12 +245,13 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
 
             <DialogActions sx={{ px: 3, py: 2 }}>
                 <Button
-                    onClick={onClose}
+                    onClick={handleClose}
+                    disabled={isPending}
                     variant="contained"
                     color="primary"
                     sx={{ fontWeight: 600, textTransform: 'none' }}
                 >
-                    Закрыть
+                    {isPending ? 'Ожидание проверки…' : 'Закрыть'}
                 </Button>
             </DialogActions>
         </Dialog>

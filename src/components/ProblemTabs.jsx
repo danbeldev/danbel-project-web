@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ApiService from "../network/API";
-import YandexBannerAd from "./YandexBannerAd";
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -46,8 +45,6 @@ function ProblemTabs({problem, submissions, handleSubmissionClick, updateSubmiss
 
     return (
         <Box sx={{width: '100%'}}>
-
-            <YandexBannerAd/>
 
             {availableTabs.length > 0 &&
                 <Tabs

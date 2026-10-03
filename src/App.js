@@ -4,7 +4,8 @@ import {ArticlesPage} from "./pages/ArticlesPage";
 import {useEffect, useMemo, useState} from "react";
 import {Box, createTheme, CssBaseline} from "@mui/material";
 import {Header} from "./components/Header";
-import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
+import Footer from "./components/Footer";
+import {BrowserRouter, Navigate, Route, Routes, useLocation} from "react-router-dom";
 import {ArticlesDetailsPage} from "./pages/ArticlesDetailsPage";
 import TagDetailsPage from "./pages/TagDetailsPage";
 import UserProfilePage from "./pages/UserProfilePage";
@@ -12,6 +13,21 @@ import CreateArticlePage from "./pages/CreateArticlePage";
 import SignInPage from "./pages/SignInPage";
 import {ProblemCodeDetailsPage} from "./pages/ProblemCodeDetailsPage";
 import {ProfilePage} from "./pages/ProfilePage";
+import {GroupsPage} from "./pages/GroupsPage";
+import {GroupDetailsPage} from "./pages/GroupDetailsPage";
+import {AdminLabsPage} from "./pages/AdminLabsPage";
+import {AdminGitTasksPage} from "./pages/AdminGitTasksPage";
+import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
+import {PrivacyPage} from "./pages/PrivacyPage";
+import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
+import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
+import {CourseworkDetailsPage} from "./pages/CourseworkDetailsPage";
+import YandexAdBlock from "./components/ads/YandexAdBlock";
+import FloorAdBlock from "./components/ads/FloorAdBlock";
+import InImageAdInjector from "./components/ads/InImageAdInjector";
+import {showOverlayAd} from "./components/ads/showOverlayAd";
+
+const TOP_BANNER_BLOCK_ID = "R-A-20141312-3";
 
 const getDesignTokens = (mode) => ({
     palette: {
@@ -127,32 +143,72 @@ function App() {
         <BrowserRouter>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    minHeight="100vh"
-                >
-                    <Header mode={mode} toggleTheme={toggleTheme} />
-                    
-                    <Box flexGrow={1}>
-                        <Routes>
-                            <Route path="/articles" element={<ArticlesPage />} />
-                            <Route path="/articles/:id" element={<ArticlesDetailsPage mode={mode}/>} />
-                            <Route path="/problems/:problemId" element={<ProblemCodeDetailsPage mode={mode}/>} />
-                            <Route path="/articles/new" element={<CreateArticlePage />} />
-                            <Route path="/articles/edit/:id" element={<CreateArticlePage />} />
-                            <Route path="/tags/:id" element={<TagDetailsPage />} />
-                            <Route path="/users/:id" element={<UserProfilePage />} />
-                            <Route path="/sign-in" element={<SignInPage />} />
-                            <Route path="/profile" element={<ProfilePage />} />
-                            <Route path="*" element={<Navigate to="/articles" />} />
-                        </Routes>
-                    </Box>
-                </Box>
+                <AppLayout mode={mode} toggleTheme={toggleTheme} />
             </ThemeProvider>
         </BrowserRouter>
     );
 }
+
+const NO_FOOTER_PATH_PREFIXES = ['/problems/'];
+
+const AppLayout = ({ mode, toggleTheme }) => {
+    const location = useLocation();
+    const hideFooter = NO_FOOTER_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix));
+
+    // Overlay-β не перекрывает контент целиком (в отличие от Полноэкранного),
+    // поэтому его уместно триггерить на каждый переход по сайту, а не только
+    // на конкретное действие — лимит показов всё равно регулируется в кабинете.
+    useEffect(() => {
+        showOverlayAd();
+    }, [location.pathname]);
+
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            minHeight="100vh"
+        >
+            <Header mode={mode} toggleTheme={toggleTheme} />
+
+            <Box sx={{maxWidth: 'lg', mx: 'auto', width: '100%', px: 2, pt: 2}}>
+                <YandexAdBlock blockId={TOP_BANNER_BLOCK_ID}/>
+            </Box>
+
+            {/* Floor Ad — липкий рекламный блок снизу экрана, рендерится Яндексом
+                поверх контента (fixed-overlay). На коротких страницах без футера
+                (например /sign-in) он перекрывал интерактивные элементы формы —
+                см. найденный вживую баг: клик по полю пароля попадал в рекламу.
+                Запас снизу не даёт последнему видимому элементу страницы упереться
+                в зону, где появляется Floor Ad. */}
+            <Box flexGrow={1} sx={{pb: 12}}>
+                <Routes>
+                    <Route path="/articles" element={<ArticlesPage />} />
+                    <Route path="/articles/:id" element={<ArticlesDetailsPage mode={mode}/>} />
+                    <Route path="/problems/:problemId" element={<ProblemCodeDetailsPage mode={mode}/>} />
+                    <Route path="/articles/new" element={<CreateArticlePage />} />
+                    <Route path="/articles/edit/:id" element={<CreateArticlePage />} />
+                    <Route path="/tags/:id" element={<TagDetailsPage />} />
+                    <Route path="/users/:id" element={<UserProfilePage />} />
+                    <Route path="/sign-in" element={<SignInPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/groups" element={<GroupsPage />} />
+                    <Route path="/groups/:id" element={<GroupDetailsPage />} />
+                    <Route path="/admin/labs" element={<AdminLabsPage />} />
+                    <Route path="/admin/git-tasks" element={<AdminGitTasksPage />} />
+                    <Route path="/admin/mysql-tasks" element={<AdminMysqlTasksPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                    <Route path="/admin/courseworks" element={<AdminCourseworksPage />} />
+                    <Route path="/admin/courseworks/:id" element={<CourseworkDetailsPage />} />
+                    <Route path="*" element={<Navigate to="/articles" />} />
+                </Routes>
+            </Box>
+
+            {!hideFooter && <Footer />}
+            <FloorAdBlock/>
+            <InImageAdInjector/>
+        </Box>
+    );
+};
 
 export default App;

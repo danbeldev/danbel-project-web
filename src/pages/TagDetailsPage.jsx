@@ -8,7 +8,9 @@ import {
 } from '@mui/material';
 import ApiService from '../network/API';
 import ArticleList from "../components/ArticleList";
-import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
+import YandexAdBlock from "../components/ads/YandexAdBlock";
+
+const FEED_BLOCK_ID = "R-A-20141312-5";
 
 const TagDetailsPage = () => {
     const {id} = useParams();
@@ -64,15 +66,8 @@ const TagDetailsPage = () => {
 
             <div style={{height: "20px"}}/>
 
-            <YandexBannerAd/>
-
-            <div style={{height: "20px"}}/>
-
             <ArticleList tagIds={[id]} authorIds={[]}/>
-
-            <div style={{height: "10px"}}/>
-
-            <YandexTapeAd/>
+            <YandexAdBlock blockId={FEED_BLOCK_ID} type="feed"/>
         </Container>
     );
 };

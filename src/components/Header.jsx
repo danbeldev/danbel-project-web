@@ -17,7 +17,7 @@ import {
     Brightness4,
     Brightness7,
     Code,
-    Menu as MenuIcon, AccountCircle, KeyboardArrowUp
+    Menu as MenuIcon, AccountCircle
 } from '@mui/icons-material';
 import ApiService from '../network/API';
 import {Link, useNavigate} from 'react-router-dom';
@@ -28,8 +28,6 @@ export const Header = ({ mode, toggleTheme }) => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const [anchorElTags, setAnchorElTags] = useState(null);
-    const [anchorElProjects, setAnchorElProjects] = useState(null);
-    const [anchorElLocation, setAnchorElLocation] = useState(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
     const [tags, setTags] = useState([]);
@@ -209,48 +207,61 @@ export const Header = ({ mode, toggleTheme }) => {
                                 </Menu>
                             </Box>
 
-                            {/* Проекты */}
-                            <Box>
+                            {/* Группы (только для админа) */}
+                            {ApiService.isAdmin() && (
                                 <Button
                                     color="inherit"
-                                    endIcon={<ExpandMore />}
-                                    onClick={handleMenuOpen(setAnchorElProjects)}
+                                    component={Link}
+                                    to="/groups"
                                     sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                    Проекты
+                                    Группы
                                 </Button>
-                                <Menu
-                                    anchorEl={anchorElProjects}
-                                    open={Boolean(anchorElProjects)}
-                                    onClose={handleMenuClose(setAnchorElProjects)}
-                                >
-                                    <MenuItem onClick={() => {
-                                        window.open('https://github.com/danbeldev/alice-ktx', '_blank');
-                                        handleMenuClose(setAnchorElProjects)
-                                    }}>Alice-ktx</MenuItem>
-                                    <MenuItem onClick={() => {
-                                        window.open('https://github.com/danbeldev/remote-ops', '_blank');
-                                        handleMenuClose(setAnchorElProjects)
-                                    }}>Remote-ops</MenuItem>
-                                    <MenuItem onClick={() => {
-                                        window.open('https://github.com/danbeldev/firebase-app-check-spring', '_blank');
-                                        handleMenuClose(setAnchorElProjects)
-                                    }}>Firebase-App-Check-Spring</MenuItem>
-                                </Menu>
-                            </Box>
+                            )}
 
-                            {/* Где я? */}
-                            <Box>
+                            {ApiService.isAdmin() && (
                                 <Button
                                     color="inherit"
-                                    onClick={() => {
-                                        window.open('https://github.com/danbeldev', '_blank');
-                                    }}
+                                    component={Link}
+                                    to="/admin/labs"
                                     sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                    GitHub
+                                    Лаборатории
                                 </Button>
-                            </Box>
+                            )}
+
+                            {ApiService.isAdmin() && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin/git-tasks"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                    Git-репозитории
+                                </Button>
+                            )}
+
+                            {ApiService.isAdmin() && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin/courseworks"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                    Курсовые
+                                </Button>
+                            )}
+
+                            {ApiService.isAdmin() && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin/mysql-tasks"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                    MySQL-базы
+                                </Button>
+                            )}
                         </Box>
                     ) : (
                         // Мобильная навигация (справа)
@@ -289,31 +300,51 @@ export const Header = ({ mode, toggleTheme }) => {
                                     </MenuItem>
                                 ))}
 
-                                {/* Проекты */}
-                                <Typography variant="subtitle2" sx={{ px: 2, pt: 2, fontWeight: 'bold' }}>
-                                    Проекты
-                                </Typography>
-                                <MenuItem onClick={() => {
-                                    window.open('https://github.com/danbeldev/alice-ktx', '_blank');
-                                    handleMenuClose(setMobileMenuAnchor)
-                                }} sx={{ pl: 3 }}>Alice-ktx</MenuItem>
-                                <MenuItem onClick={() => {
-                                    window.open('https://github.com/danbeldev/remote-ops', '_blank');
-                                    handleMenuClose(setMobileMenuAnchor)
-                                }} sx={{ pl: 3 }}>Remote-ops</MenuItem>
-                                <MenuItem onClick={() => {
-                                    window.open('https://github.com/danbeldev/firebase-app-check-spring', '_blank');
-                                    handleMenuClose(setMobileMenuAnchor)
-                                }} sx={{ pl: 3 }}>Firebase-App-Check-Spring</MenuItem>
-
-                                {/* Где я? */}
-                                <Typography variant="subtitle2" sx={{ px: 2, pt: 2, fontWeight: 'bold' }}>
-                                    Где я?
-                                </Typography>
-                                <MenuItem onClick={() => {
-                                    window.open('https://github.com/danbeldev', '_blank');
-                                    handleMenuClose(setMobileMenuAnchor)
-                                }} sx={{ pl: 3 }}>GitHub</MenuItem>
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/groups"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        Группы
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/labs"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        Лаборатории
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/git-tasks"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        Git-репозитории
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/courseworks"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        Курсовые
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/mysql-tasks"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        MySQL-базы
+                                    </MenuItem>
+                                )}
                             </Menu>
                         </Box>
                     )}
@@ -331,7 +362,7 @@ export const Header = ({ mode, toggleTheme }) => {
                                 {user.avatarFileName ? (
                                     <Avatar
                                         alt={user.username}
-                                        src={`https://map.matstart.ru:30/danbel-project-api/files/${user.avatarFileName}`}
+                                        src={ApiService.getFileUrl(user.avatarFileName)}
                                     />
                                 ) : (
                                     <AccountCircle />
@@ -364,15 +395,15 @@ export const Header = ({ mode, toggleTheme }) => {
                     )}
 
                     {/* Переключатель темы (виден на всех устройствах) */}
-                    {/*<Tooltip title="Сменить тему">*/}
-                    {/*    <IconButton*/}
-                    {/*        onClick={toggleTheme}*/}
-                    {/*        color="inherit"*/}
-                    {/*        size={isMobile ? "small" : "medium"}*/}
-                    {/*    >*/}
-                    {/*        {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}*/}
-                    {/*    </IconButton>*/}
-                    {/*</Tooltip>*/}
+                    <Tooltip title="Сменить тему">
+                        <IconButton
+                            onClick={toggleTheme}
+                            color="inherit"
+                            size={isMobile ? "small" : "medium"}
+                        >
+                            {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+                        </IconButton>
+                    </Tooltip>
                 </Box>
             </Toolbar>
         </AppBar>

@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import ApiService from '../network/API';
 import { useNavigate } from 'react-router-dom';
-import YandexBannerAd, {YandexBottomAd} from "../components/YandexBannerAd";
 
 const SignInPage = () => {
     const navigate = useNavigate();
@@ -71,12 +70,6 @@ const SignInPage = () => {
                     </Button>
                 </Stack>
             </Paper>
-
-            <div style={{height:'10px'}}/>
-
-            <YandexBannerAd/>
-
-            <YandexBottomAd/>
         </Container>
     );
 };

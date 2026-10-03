@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-    baseURL: 'https://api.pgk.danbel.ru/danbel-project-api',
+    baseURL: 'https://danbel.teacher.alspio.com/danbel-project-api',
 });
 
 // Request interceptor to add auth token to headers
@@ -38,11 +38,17 @@ api.interceptors.response.use(
 
 const ApiService = {
     // Auth methods
-    signUp: async (username, password) => {
+    // Только для админа: создаёт аккаунт (пароль можно не передавать — сгенерируется сам),
+    // опционально сразу привязывает к группе.
+    signUp: async (username, password, groupId, lastName, firstName, patronymic) => {
         try {
             const response = await api.post('/users/security/sign-up', {
                 username,
-                password,
+                password: password || null,
+                groupId: groupId || null,
+                lastName: lastName || null,
+                firstName: firstName || null,
+                patronymic: patronymic || null,
             });
             return response.data;
         } catch (error) {
@@ -99,6 +105,9 @@ const ApiService = {
         }
     },
 
+    // Прямая ссылка на файл (обложки, аватары) — единая точка, чтобы не хардкодить домен по всему фронту.
+    getFileUrl: (filename) => `${api.defaults.baseURL}/files/${filename}`,
+
     // Article methods
     getAllArticles: async (tagIds = [], authorIds = [], pageNumber = 0, pageSize = 20) => {
         try {
@@ -109,6 +118,15 @@ const ApiService = {
             params.append('pageSize', pageSize);
 
             const response = await api.get(`/articles?${params.toString()}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getDefaultCovers: async () => {
+        try {
+            const response = await api.get('/articles/default-covers');
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -178,6 +196,303 @@ const ApiService = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
+    },
+
+    // Group methods (только для админа)
+    getAllGroups: async () => {
+        try {
+            const response = await api.get('/groups');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getGroupById: async (id) => {
+        try {
+            const response = await api.get(`/groups/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // Создаёт несколько студентов через единый sign-up (по одному вызову на запись),
+    // каждый сразу привязывается к группе. entries: [{username, lastName, firstName, patronymic}].
+    // Если кто-то из логинов уже занят — бросает ошибку с указанием, на каком остановились.
+    createStudents: async (groupId, entries) => {
+        const results = [];
+        for (const entry of entries) {
+            try {
+                const created = await ApiService.signUp(
+                    entry.username, null, groupId,
+                    entry.lastName, entry.firstName, entry.patronymic
+                );
+                results.push(created);
+            } catch (error) {
+                const reason = error?.reason || error?.message || (typeof error === 'string' ? error : 'ошибка создания');
+                const err = new Error(`${reason} (логин: ${entry.username})`);
+                err.partialResults = results;
+                throw err;
+            }
+        }
+        return results;
+    },
+
+    resetPassword: async (userId) => {
+        try {
+            const response = await api.post(`/users/${userId}/reset-password`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    calculateGroupGrade: async (groupId) => {
+        try {
+            const response = await api.post(`/groups/${groupId}/calculate-grade`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // Coursework (курсовые) methods
+    getAllCourseworks: async () => {
+        try {
+            const response = await api.get('/courseworks');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getCourseworkById: async (id) => {
+        try {
+            const response = await api.get(`/courseworks/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    createCoursework: async (title, groupIds) => {
+        try {
+            const response = await api.post('/courseworks', {title, groupIds});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMyCourseworks: async () => {
+        try {
+            const response = await api.get('/courseworks/my');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    updateCourseworkSubmission: async (courseworkId, userId, data) => {
+        try {
+            const response = await api.put(`/courseworks/${courseworkId}/submissions/${userId}`, data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    approveCourseworkSubmission: async (courseworkId, userId) => {
+        try {
+            const response = await api.post(`/courseworks/${courseworkId}/submissions/${userId}/approve`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    unapproveCourseworkSubmission: async (courseworkId, userId) => {
+        try {
+            const response = await api.post(`/courseworks/${courseworkId}/submissions/${userId}/unapprove`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setEvaluation: async (userId, articleId, grade) => {
+        try {
+            const response = await api.put(`/users/${userId}/evaluations/${articleId}`, { grade });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    clearEvaluation: async (userId, articleId) => {
+        try {
+            const response = await api.delete(`/users/${userId}/evaluations/${articleId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // Lab (SSH_LAB) methods
+    startLab: async (problemId) => {
+        try {
+            const response = await api.post(`/labs/start`, null, { params: { problemId } });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    stopLab: async (sessionId) => {
+        try {
+            const response = await api.post(`/labs/${sessionId}/stop`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    pauseLab: async (sessionId) => {
+        try {
+            const response = await api.post(`/labs/${sessionId}/pause`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    resumeLab: async (sessionId) => {
+        try {
+            const response = await api.post(`/labs/${sessionId}/resume`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMyLab: async () => {
+        try {
+            const response = await api.get('/labs/mine');
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 404) return null;
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getLabById: async (id) => {
+        try {
+            const response = await api.get(`/labs/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getLabStats: async (id) => {
+        try {
+            const response = await api.get(`/labs/${id}/stats`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getLabConfig: async () => {
+        try {
+            const response = await api.get('/labs/config');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getAllActiveLabs: async () => {
+        try {
+            const response = await api.get('/labs');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // Git-задачи (self-hosted Gitea)
+    createGitRepo: async (problemId) => {
+        try {
+            const response = await api.post(`/git-tasks/${problemId}/create-repo`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMyGitRepo: async (problemId) => {
+        try {
+            const response = await api.get(`/git-tasks/${problemId}/mine`);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 404) return null;
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getGitCredentials: async () => {
+        try {
+            const response = await api.get('/git-tasks/credentials');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getAllGitTasks: async () => {
+        try {
+            const response = await api.get('/git-tasks');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // MySQL-задачи (своя база на студента под задачу)
+    createMysqlDb: async (problemId) => {
+        try {
+            const response = await api.post(`/mysql-tasks/${problemId}/create-db`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMyMysqlDb: async (problemId) => {
+        try {
+            const response = await api.get(`/mysql-tasks/${problemId}/mine`);
+            return response.data;
+        } catch (error) {
+            if (error.response?.status === 404) return null;
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getAllMysqlTasks: async () => {
+        try {
+            const response = await api.get('/mysql-tasks');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getLabTerminalUrl: (sessionId, env) => {
+        const base = api.defaults.baseURL.replace(/^http/, 'ws');
+        const token = localStorage.getItem('accessToken');
+        return `${base}/ws/labs/terminal?token=${encodeURIComponent(token)}&sessionId=${sessionId}&env=${encodeURIComponent(env)}`;
     },
 
     // Helper method to check auth status

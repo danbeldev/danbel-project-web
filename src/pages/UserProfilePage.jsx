@@ -11,7 +11,6 @@ import {
 import {format} from 'date-fns';
 import ApiService from '../network/API';
 import ArticleList from "../components/ArticleList";
-import YandexBannerAd, {YandexTapeAd} from "../components/YandexBannerAd";
 
 const UserProfilePage = () => {
     const {id} = useParams();
@@ -60,7 +59,7 @@ const UserProfilePage = () => {
             <Box textAlign="center">
                 <Avatar
                     src={user.avatarFileName
-                        ? `https://map.matstart.ru:30/danbel-project-api/files/${user.avatarFileName}`
+                        ? ApiService.getFileUrl(user.avatarFileName)
                         : undefined
                     }
                     alt={user.username}
@@ -87,15 +86,7 @@ const UserProfilePage = () => {
 
             <div style={{height: "20px"}}/>
 
-            <YandexBannerAd/>
-
-            <div style={{height: "20px"}}/>
-
             <ArticleList tagIds={[]} authorIds={[id]}/>
-
-            <div style={{height: "10px"}}/>
-
-            <YandexTapeAd/>
         </Container>
     );
 };

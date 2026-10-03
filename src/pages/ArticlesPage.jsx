@@ -3,7 +3,9 @@ import {
     Container,
 } from '@mui/material';
 import ArticleList from "../components/ArticleList";
-import YandexBannerAd from "../components/YandexBannerAd";
+import YandexAdBlock from "../components/ads/YandexAdBlock";
+
+const FEED_BLOCK_ID = "R-A-20141312-5";
 
 export const ArticlesPage = () => {
 
@@ -13,11 +15,8 @@ export const ArticlesPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{py: 4}}>
-            <YandexBannerAd/>
-
-            <div style={{height:'10px'}}/>
-
             <ArticleList tagIds={[]} authorIds={[]}/>
+            <YandexAdBlock blockId={FEED_BLOCK_ID} type="feed"/>
         </Container>
     );
 };

@@ -3,11 +3,15 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import {Box, Typography, List, Link, Divider, ListItemButton} from '@mui/material';
-import YandexBannerAd from './YandexBannerAd';
 import {BookOpenText} from 'lucide-react';
+import YandexAdBlock from './ads/YandexAdBlock';
 
+const ARTICLE_AD_BLOCK_ID = 'R-A-20141312-4';
+
+// Ключевое слово {{ad}} в тексте статьи подменяется на рекламный блок —
+// используется при написании лекций, чтобы вставить рекламу между абзацами.
 const COMPONENT_PLACEHOLDERS = {
-    '{{YandexAd}}': <YandexBannerAd/>,
+    '{{ad}}': <YandexAdBlock blockId={ARTICLE_AD_BLOCK_ID}/>,
 };
 
 function extractHeadings(markdown) {
@@ -51,7 +55,14 @@ const MarkdownContent = ({content, mode, showToc = true}) => {
                         </Typography>
                     </Box>
                     <Divider sx={{mb: 1}}/>
-                    <List disablePadding>
+                    <List
+                        disablePadding
+                        sx={{
+                            maxHeight: {xs: 280, sm: 'none'},
+                            overflowY: {xs: 'auto', sm: 'visible'},
+                            overscrollBehavior: 'contain',
+                        }}
+                    >
                         {headings.map((heading, index) => (
                             <ListItemButton
                                 key={index}
@@ -89,6 +100,55 @@ const MarkdownContent = ({content, mode, showToc = true}) => {
                     },
                     '& code': {
                         fontFamily: 'Source Code Pro, monospace',
+                    },
+                    '& table': {
+                        display: 'block',
+                        width: '100%',
+                        maxWidth: '100%',
+                        overflowX: 'auto',
+                        borderCollapse: 'collapse',
+                        my: 2,
+                    },
+                    '& th, & td': {
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        px: 1.5,
+                        py: 1,
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                    },
+                    '& th': {
+                        backgroundColor: mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
+                        fontWeight: 600,
+                    },
+                    '& blockquote': {
+                        m: '16px 0',
+                        px: 2,
+                        py: 1,
+                        borderLeft: '4px solid',
+                        borderColor: 'primary.main',
+                        backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                        borderRadius: 1,
+                        color: 'text.secondary',
+                        '& p': {
+                            m: 0,
+                        },
+                    },
+                    '& hr': {
+                        border: 'none',
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        my: 3,
+                    },
+                    '& img': {
+                        maxWidth: '100%',
+                        borderRadius: 1,
+                    },
+                    '& ul, & ol': {
+                        pl: 3,
+                    },
+                    '& li': {
+                        mb: 0.5,
                     },
                 }}
             >

@@ -21,8 +21,16 @@ import MarkdownContent from "../components/MarkdownContent";
 import SubmissionDetailsDialog from "../components/SubmissionDetailsDialog";
 import ProblemTabs from "../components/ProblemTabs";
 import ProblemLimitsCard from "../components/ProblemLimitsCard";
+import LabLimitsCard from "../components/LabLimitsCard";
 import {SubmitSection} from "../components/SubmitSection";
+import LabPanel from "../components/LabPanel";
+import GitTaskPanel from "../components/GitTaskPanel";
+import MysqlTaskPanel from "../components/MysqlTaskPanel";
 import SubmitStatusChip from "../components/SubmitStatusChip";
+import {showFullscreenAd} from "../components/ads/showFullscreenAd";
+
+const NO_SUBMIT_TYPES = ['SSH_LAB', 'GIT_REPO', 'MYSQL_DB'];
+const PENDING_STATUSES = ['PENDING', 'RUNNING'];
 
 export const ProblemCodeDetailsPage = ({mode}) => {
     const {problemId} = useParams();
@@ -51,6 +59,14 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             setLanguages(langs);
             setSelectedLanguage(langs[0]?.id || 1);
             setSubmissions(subs);
+
+            // Если последняя отправка ещё не завершена (например, страницу
+            // обновили, пока шла проверка) — открываем модалку заново, не даём
+            // студенту потерять из виду попытку, которая уже отправлена.
+            const lastSubmission = subs[0];
+            if (lastSubmission && PENDING_STATUSES.includes(lastSubmission.status)) {
+                handleSubmissionClick(lastSubmission.id);
+            }
         };
 
         fetchData();
@@ -68,14 +84,39 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     }, [problemId, selectedLanguage]);
 
     const handleSubmit = async () => {
-        await ApiService.submitSolution(problemId, {
+        showFullscreenAd();
+
+        const submissionId = await ApiService.submitSolution(problemId, {
             code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : code,
             languageId: selectedLanguage,
         });
-        alert('Отправлено!');
+
         const updatedSubs = await ApiService.getSubmissions(problemId);
         setSubmissions(updatedSubs);
+
+        if (submissionId) {
+            handleSubmissionClick(submissionId);
+        }
     };
+
+    const PENDING_STATUSES = ['PENDING', 'RUNNING'];
+
+    useEffect(() => {
+        if (!openModal || !submissionDetail || !PENDING_STATUSES.includes(submissionDetail.status)) {
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            const detail = await ApiService.getSubmissionDetails(submissionDetail.id);
+            setSubmissionDetail(detail);
+            if (!PENDING_STATUSES.includes(detail.status)) {
+                const updatedSubs = await ApiService.getSubmissions(problemId);
+                setSubmissions(updatedSubs);
+            }
+        }, 5000);
+
+        return () => clearTimeout(timer);
+    }, [openModal, submissionDetail, problemId]);
 
     const handleSubmissionClick = async (submissionId) => {
         const detail = await ApiService.getSubmissionDetails(submissionId);
@@ -114,6 +155,9 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                         variant="fullWidth"
                         textColor="inherit"
                         sx={{
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 10,
                             borderRadius: 2,
                             margin: '5px 15px',
                             bgcolor: 'background.default',
@@ -175,6 +219,12 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     <div style={{height: "10px"}}/>
                                 </>
                             }
+                            {problem.type === 'SSH_LAB' &&
+                                <>
+                                    <LabLimitsCard/>
+                                    <div style={{height: "10px"}}/>
+                                </>
+                            }
 
                             <ProblemTabs
                                 problem={problem}
@@ -211,17 +261,25 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                 </FormControl>
                             }
 
-                            <SubmitSection problem={problem} handleSubmit={handleSubmit} />
+                            {!NO_SUBMIT_TYPES.includes(problem.type) &&
+                                <SubmitSection problem={problem} handleSubmit={handleSubmit} />
+                            }
 
                             <Box
                                 sx={{
                                     height: '60vh',
-                                    border: problem.type === 'ANSWERS' ? '0px solid #ccc' : '1px solid #ccc',
+                                    border: (problem.type === 'ANSWERS' || NO_SUBMIT_TYPES.includes(problem.type)) ? '0px solid #ccc' : '1px solid #ccc',
                                     borderRadius: 2,
                                     overflow: 'hidden',
                                 }}
                             >
-                                {problem.type === 'ANSWERS' ?
+                                {problem.type === 'SSH_LAB' ?
+                                    <LabPanel problem={problem} />
+                                : problem.type === 'GIT_REPO' ?
+                                    <GitTaskPanel problem={problem} />
+                                : problem.type === 'MYSQL_DB' ?
+                                    <MysqlTaskPanel problem={problem} />
+                                : problem.type === 'ANSWERS' ?
                                     <Box sx={{width: "100%", maxWidth: 600, mx: "auto", my: 2}}>
                                         <Typography variant="h6" gutterBottom>
                                             Выберите правильные ответы:
@@ -281,9 +339,10 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                     )}
                 </Box>
             ) : (
-                <Grid container height="100vh">
+                <Grid container height="calc(100vh - 64px)">
                     {/* Левая часть: условия задачи */}
                     <Grid item xs={5} sx={{overflowY: 'auto', borderRight: '1px solid #eee', p: 3, width: '40%'}}>
+                      <Box sx={{maxWidth: 720, mx: 'auto'}}>
                         <Typography variant="h4" gutterBottom>
                             {problem.title}
                         </Typography>
@@ -305,6 +364,12 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                 <div style={{height: "10px"}}/>
                             </>
                         }
+                        {problem.type === 'SSH_LAB' &&
+                            <>
+                                <LabLimitsCard/>
+                                <div style={{height: "10px"}}/>
+                            </>
+                        }
 
                         <ProblemTabs
                             problem={problem}
@@ -312,6 +377,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             handleSubmissionClick={handleSubmissionClick}
                             updateSubmission={updateSubmission}
                         />
+                      </Box>
                     </Grid>
 
                     {/* Правая часть: редактор */}
@@ -322,51 +388,59 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             p: 3,
                             display: 'flex',
                             flexDirection: 'column',
-                            height: '100vh',
+                            height: 'calc(100vh - 64px)',
                             boxSizing: 'border-box',
                             width: '60%',
                         }}
                     >
-                        <Box display="flex" alignItems="center" mb={2}>
-                            {problem.type === 'CODE' &&
-                                <FormControl sx={{minWidth: 120, mr: 2}}>
-                                    <InputLabel id="language-select-label">Язык</InputLabel>
-                                    <Select
-                                        labelId="language-select-label"
-                                        value={selectedLanguage}
-                                        label="Язык"
-                                        onChange={(e) => setSelectedLanguage(e.target.value)}
-                                    >
-                                        {languages.map((lang) => (
-                                            <MenuItem key={lang.id} value={lang.id}>
-                                                {lang.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            }
+                        {!NO_SUBMIT_TYPES.includes(problem.type) &&
+                            <Box display="flex" alignItems="center" mb={2}>
+                                {problem.type === 'CODE' &&
+                                    <FormControl sx={{minWidth: 120, mr: 2}}>
+                                        <InputLabel id="language-select-label">Язык</InputLabel>
+                                        <Select
+                                            labelId="language-select-label"
+                                            value={selectedLanguage}
+                                            label="Язык"
+                                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                                        >
+                                            {languages.map((lang) => (
+                                                <MenuItem key={lang.id} value={lang.id}>
+                                                    {lang.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                }
 
-                            <SubmitSection problem={problem} handleSubmit={handleSubmit} />
+                                <SubmitSection problem={problem} handleSubmit={handleSubmit} />
 
-                            {problem.type === 'INPUT' &&
-                                <>
-                                    <div style={{width: '10px'}}/>
-                                    Напишите ответ
-                                </>
-                            }
-                        </Box>
+                                {problem.type === 'INPUT' &&
+                                    <>
+                                        <div style={{width: '10px'}}/>
+                                        Напишите ответ
+                                    </>
+                                }
+                            </Box>
+                        }
 
                         <Box
                             sx={{
-                                height: '85%',
-                                border: problem.type === 'ANSWERS' ? '0px solid #ccc' : '1px solid #ccc',
+                                height: NO_SUBMIT_TYPES.includes(problem.type) ? '100%' : '85%',
+                                border: (problem.type === 'ANSWERS' || NO_SUBMIT_TYPES.includes(problem.type)) ? '0px solid #ccc' : '1px solid #ccc',
                                 borderRadius: 2,
                                 overflow: 'hidden',
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}
                         >
-                            {problem.type === 'ANSWERS' ?
+                            {problem.type === 'SSH_LAB' ?
+                                <LabPanel problem={problem} />
+                            : problem.type === 'GIT_REPO' ?
+                                <GitTaskPanel problem={problem} />
+                            : problem.type === 'MYSQL_DB' ?
+                                <MysqlTaskPanel problem={problem} />
+                            : problem.type === 'ANSWERS' ?
                                 <Box sx={{width: "100%", maxWidth: 600, mx: "auto", my: 2}}>
                                     <Typography variant="h6" gutterBottom>
                                         Выберите правильные ответы:
