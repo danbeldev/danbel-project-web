@@ -65,11 +65,14 @@ const AdminCriteriaGradingPage = () => {
     };
 
     const runAiForStudent = async (student) => {
+        // Точечный запуск — и проверка, и перепроверка. Баллы, выставленные вручную, перезаписываем только с согласия.
+        const hasManual = Object.values(student.results || {}).some((r) => r.source === 'TEACHER');
+        if (hasManual && !window.confirm('У студента есть баллы, которые вы выставили вручную. Перепроверить AI и перезаписать их?')) return;
         setAiBusyId(student.userId);
         try {
-            const outcome = await ApiService.runCriteriaAiForUser(problemId, student.userId, true);
+            const outcome = await ApiService.runCriteriaAiForUser(problemId, student.userId, true, hasManual);
             const ok = outcome.status === 'OK';
-            setToast({severity: ok ? 'success' : 'warning', message: ok ? 'AI-черновик готов' : (outcome.message || 'Не проверено')});
+            setToast({severity: ok ? 'success' : 'warning', message: ok ? (outcome.published ? 'Проверено и опубликовано' : 'Проверено, результат — черновик') : (outcome.message || 'Не проверено')});
             await load();
             ApiService.getCriteriaAiStatus(problemId).then(setAiStatus).catch(() => {});
         } catch (err) {

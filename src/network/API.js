@@ -530,9 +530,9 @@ const ApiService = {
         }
     },
 
-    runCriteriaAiForUser: async (problemId, userId, force = true) => {
+    runCriteriaAiForUser: async (problemId, userId, force = true, overwriteManual = false) => {
         try {
-            const response = await api.post(`/problems/${problemId}/criteria/ai/run/${userId}`, null, {params: {force}});
+            const response = await api.post(`/problems/${problemId}/criteria/ai/run/${userId}`, null, {params: {force, overwriteManual}});
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

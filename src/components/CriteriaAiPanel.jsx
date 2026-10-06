@@ -8,7 +8,7 @@ import ApiService from '../network/API';
 
 const fmtTokens = (n) => (n >= 1000 ? `${Math.round(n / 100) / 10} тыс.` : String(n));
 
-const STATUS_LABEL = {OK: 'можно проверить', TOO_LARGE: 'слишком большая работа', EMPTY: 'нет работы', ERROR: 'ошибка'};
+const STATUS_LABEL = {OK: 'можно проверить', TOO_LARGE: 'слишком большая работа', EMPTY: 'нет работы', DONE: 'уже проверен', ERROR: 'ошибка'};
 
 // Панель AI-проверки на странице проверки работ: оценка объёма, запуск по всей задаче, прогресс.
 // AI ставит только черновики баллов — публикует преподаватель.
@@ -75,8 +75,8 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
         const where = status?.autoPublish ? 'Баллы будут ОПУБЛИКОВАНЫ автоматически.' : 'Баллы появятся черновиками.';
         const scope = groupName ? `группы «${groupName}»` : 'всех групп';
         const text = estimate
-            ? `Проверить ${estimate.checkable} работ(ы) ${scope}, ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? ${where}`
-            : `Запустить AI-проверку работ ${scope}? ${where}`;
+            ? `Проверить ещё не проверенные работы ${scope}: ${estimate.checkable} через AI (≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов), ${estimate.empty} без таблиц получат 0 баллов и будут опубликованы, ${estimate.alreadyChecked} уже проверены и пропускаются. ${where}`
+            : `Проверить ещё не проверенные работы ${scope}? Работы без таблиц получат 0 баллов и будут опубликованы. ${where}`;
         if (!window.confirm(text)) return;
         setStarting(true);
         setError(null);
@@ -103,8 +103,9 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
                         )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
-                        AI ставит баллы и комментарии по критериям. Баллы, которые вы уже сохранили вручную, AI не
-                        перезаписывает, слишком большие работы пропускаются. Пока доступно для MySQL-задач.
+                        «Проверить всех» берёт только ещё не проверенные работы; кнопка «AI» у студента проверяет и
+                        перепроверяет конкретную работу. Работа без таблиц получает 0 баллов без обращения к AI и
+                        публикуется сразу. Ваши ручные баллы AI не перезаписывает без подтверждения. Пока только MySQL.
                     </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} sx={{flexShrink: 0}}>
@@ -163,9 +164,10 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
                 <Box sx={{mt: 2}}>
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                         <Chip label={`Работ: ${estimate.students}`}/>
-                        <Chip color="success" variant="outlined" label={`Можно проверить: ${estimate.checkable}`}/>
+                        <Chip color="success" variant="outlined" label={`К проверке AI: ${estimate.checkable}`}/>
+                        <Chip variant="outlined" label={`Уже проверены: ${estimate.alreadyChecked}`}/>
                         <Chip color="warning" variant="outlined" label={`Слишком большие: ${estimate.tooLarge}`}/>
-                        <Chip variant="outlined" label={`Пустые: ${estimate.empty}`}/>
+                        <Chip variant="outlined" label={`Без таблиц (0 баллов): ${estimate.empty}`}/>
                         <Chip color="primary" label={`≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход`}/>
                     </Stack>
                     <Button size="small" onClick={() => setShowItems((v) => !v)} sx={{mt: 1}}>
