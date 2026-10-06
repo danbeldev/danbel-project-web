@@ -48,6 +48,22 @@ const AdminCriteriaGradingPage = () => {
         ApiService.getCriteriaAiStatus(problemId).then(setAiStatus).catch(() => {});
     }, [load, problemId]);
 
+    // Публикация/возврат в черновик прямо из списка — по уже сохранённым баллам (несохранённые
+    // правки в раскрытой карточке сюда не попадают).
+    const togglePublish = async (student) => {
+        const publish = !student.published;
+        setBusyId(student.userId);
+        try {
+            await ApiService.saveCriteriaResults(problemId, student.userId, {results: [], published: publish});
+            setToast({severity: 'success', message: publish ? 'Опубликовано' : 'Возвращено в черновик'});
+            await load();
+        } catch (err) {
+            setToast({severity: 'error', message: err.message || err.reason || 'Не удалось изменить статус'});
+        } finally {
+            setBusyId(null);
+        }
+    };
+
     const runAiForStudent = async (student) => {
         setAiBusyId(student.userId);
         try {
@@ -167,6 +183,13 @@ const AdminCriteriaGradingPage = () => {
                                     AI
                                 </Button>
                             )}
+                            <Button size="small" variant={s.published ? 'outlined' : 'contained'}
+                                    color={s.published ? 'warning' : 'success'}
+                                    disabled={busyId === s.userId || (!s.published && Object.keys(s.results).length === 0)}
+                                    onClick={(e) => { e.stopPropagation(); togglePublish(s); }}
+                                    onFocus={(e) => e.stopPropagation()}>
+                                {s.published ? 'В черновик' : 'Опубликовать'}
+                            </Button>
                             <Chip size="small" color={s.published ? 'success' : 'default'}
                                   label={s.published ? (s.autoPublished ? 'Опубликовано AI' : 'Опубликовано') : 'Черновик'}/>
                         </Stack>
