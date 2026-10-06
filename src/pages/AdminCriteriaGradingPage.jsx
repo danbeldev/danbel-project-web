@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {
     Container, Typography, Box, CircularProgress, Accordion, AccordionSummary, AccordionDetails,
     TextField, Button, Chip, Stack, Paper, Breadcrumbs, Link as MuiLink, Snackbar, Alert, ButtonGroup,
+    ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -23,6 +24,7 @@ const AdminCriteriaGradingPage = () => {
     const [error, setError] = useState(null);
     const [aiStatus, setAiStatus] = useState(null);
     const [aiBusyId, setAiBusyId] = useState(null);
+    const [groupFilter, setGroupFilter] = useState('all');
 
     const load = useCallback(() => {
         return ApiService.getCriteriaGrading(problemId)
@@ -90,6 +92,13 @@ const AdminCriteriaGradingPage = () => {
     if (error) return <Container sx={{py: 4}}><Typography color="error">{error}</Typography></Container>;
     if (!data) return <Box display="flex" justifyContent="center" py={10}><CircularProgress/></Box>;
 
+    const groups = [];
+    data.students.forEach((st) => {
+        if (st.groupId != null && !groups.some((g) => g.id === st.groupId)) groups.push({id: st.groupId, name: st.groupName});
+    });
+    const selectedGroup = groups.find((g) => String(g.id) === String(groupFilter)) || null;
+    const visibleStudents = selectedGroup ? data.students.filter((st) => st.groupId === selectedGroup.id) : data.students;
+
     return (
         <Container maxWidth="lg" sx={{py: 4}}>
             <Breadcrumbs sx={{mb: 2}}>
@@ -103,18 +112,33 @@ const AdminCriteriaGradingPage = () => {
                 Баллы студенту и оценке лекции открываются только после «Опубликовать»; если у студента есть напарник, баллы засчитываются и ему.
             </Typography>
 
+            {groups.length > 1 && (
+                <Box sx={{mb: 2, overflowX: 'auto'}}>
+                    <ToggleButtonGroup size="small" exclusive color="primary" value={selectedGroup ? String(selectedGroup.id) : 'all'}
+                                       onChange={(_, v) => v && setGroupFilter(v)}>
+                        <ToggleButton value="all">Все группы ({data.students.length})</ToggleButton>
+                        {groups.map((g) => (
+                            <ToggleButton key={g.id} value={String(g.id)}>
+                                {g.name} ({data.students.filter((st) => st.groupId === g.id).length})
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+                </Box>
+            )}
+
             {data.problemType === 'MYSQL_DB' && (
-                <CriteriaAiPanel problemId={problemId} status={aiStatus} onStatusChange={setAiStatus} onFinished={load}/>
+                <CriteriaAiPanel problemId={problemId} status={aiStatus} onStatusChange={setAiStatus} onFinished={load}
+                                 groupId={selectedGroup ? selectedGroup.id : null} groupName={selectedGroup ? selectedGroup.name : null}/>
             )}
 
             {data.criteria.length === 0 && (
                 <Alert severity="warning">У задачи нет критериев — добавьте их на странице задачи.</Alert>
             )}
-            {data.students.length === 0 && data.criteria.length > 0 && (
+            {visibleStudents.length === 0 && data.criteria.length > 0 && (
                 <Typography color="text.secondary">Пока нет студентов для проверки.</Typography>
             )}
 
-            {data.criteria.length > 0 && data.students.map((s) => (
+            {data.criteria.length > 0 && visibleStudents.map((s) => (
                 <Accordion key={s.userId} disableGutters variant="outlined" sx={{mb: 1}}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                         <Stack direction="row" spacing={2} alignItems="center" sx={{width: '100%', pr: 2}} flexWrap="wrap">
@@ -133,6 +157,15 @@ const AdminCriteriaGradingPage = () => {
                                       color={lastRun(s.userId).status === 'OK' ? 'secondary' : lastRun(s.userId).status === 'ERROR' ? 'error' : 'default'}
                                       title={lastRun(s.userId).message || ''}
                                       label={{OK: 'AI проверил', SKIPPED: 'AI пропустил', ERROR: 'AI: ошибка'}[lastRun(s.userId).status] || lastRun(s.userId).status}/>
+                            )}
+                            {data.problemType === 'MYSQL_DB' && (
+                                <Button size="small" color="secondary" variant="outlined"
+                                        startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
+                                        disabled={!aiStatus?.config?.enabled || aiBusyId === s.userId || s.published}
+                                        onClick={(e) => { e.stopPropagation(); runAiForStudent(s); }}
+                                        onFocus={(e) => e.stopPropagation()}>
+                                    AI
+                                </Button>
                             )}
                             <Chip size="small" color={s.published ? 'success' : 'default'}
                                   label={s.published ? (s.autoPublished ? 'Опубликовано AI' : 'Опубликовано') : 'Черновик'}/>

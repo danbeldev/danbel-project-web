@@ -503,9 +503,9 @@ const ApiService = {
         }
     },
 
-    getCriteriaAiEstimate: async (problemId) => {
+    getCriteriaAiEstimate: async (problemId, groupId) => {
         try {
-            const response = await api.get(`/problems/${problemId}/criteria/ai/estimate`);
+            const response = await api.get(`/problems/${problemId}/criteria/ai/estimate`, {params: groupId ? {groupId} : {}});
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -521,9 +521,9 @@ const ApiService = {
         }
     },
 
-    runCriteriaAi: async (problemId, force = false) => {
+    runCriteriaAi: async (problemId, force = false, groupId = null) => {
         try {
-            const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: {force}});
+            const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: groupId ? {force, groupId} : {force}});
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

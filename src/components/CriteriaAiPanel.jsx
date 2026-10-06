@@ -12,7 +12,7 @@ const STATUS_LABEL = {OK: 'можно проверить', TOO_LARGE: 'слиш�
 
 // Панель AI-проверки на странице проверки работ: оценка объёма, запуск по всей задаче, прогресс.
 // AI ставит только черновики баллов — публикует преподаватель.
-const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
+const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId = null, groupName = null}) => {
     const [estimate, setEstimate] = useState(null);
     const [estimating, setEstimating] = useState(false);
     const [starting, setStarting] = useState(false);
@@ -20,6 +20,10 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
     const [showItems, setShowItems] = useState(false);
     const [togglingAuto, setTogglingAuto] = useState(false);
     const wasRunning = useRef(false);
+
+    useEffect(() => {
+        setEstimate(null);
+    }, [groupId]);
 
     const job = status?.job;
     const running = job?.state === 'RUNNING';
@@ -58,7 +62,7 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
         setEstimating(true);
         setError(null);
         try {
-            setEstimate(await ApiService.getCriteriaAiEstimate(problemId));
+            setEstimate(await ApiService.getCriteriaAiEstimate(problemId, groupId));
             setShowItems(true);
         } catch (err) {
             setError(err.message || err.reason || 'Не удалось оценить объём');
@@ -69,14 +73,15 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
 
     const start = async () => {
         const where = status?.autoPublish ? 'Баллы будут ОПУБЛИКОВАНЫ автоматически.' : 'Баллы появятся черновиками.';
+        const scope = groupName ? `группы «${groupName}»` : 'всех групп';
         const text = estimate
-            ? `Проверить ${estimate.checkable} работ(ы), ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? ${where}`
-            : `Запустить AI-проверку всех работ? ${where}`;
+            ? `Проверить ${estimate.checkable} работ(ы) ${scope}, ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? ${where}`
+            : `Запустить AI-проверку работ ${scope}? ${where}`;
         if (!window.confirm(text)) return;
         setStarting(true);
         setError(null);
         try {
-            await ApiService.runCriteriaAi(problemId, false);
+            await ApiService.runCriteriaAi(problemId, false, groupId);
             await refresh();
         } catch (err) {
             setError(err.message || err.reason || 'Не удалось запустить проверку');
@@ -105,11 +110,11 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
                 <Stack direction="row" spacing={1} sx={{flexShrink: 0}}>
                     <Button variant="outlined" startIcon={estimating ? <CircularProgress size={16}/> : <CalculateIcon/>}
                             onClick={doEstimate} disabled={estimating || running}>
-                        Оценить объём
+                        {groupName ? 'Оценить объём группы' : 'Оценить объём'}
                     </Button>
                     <Button variant="contained" color="secondary" onClick={start}
                             disabled={!config?.enabled || running || starting}>
-                        Проверить всех
+                        {groupName ? `Проверить группу ${groupName}` : 'Проверить всех'}
                     </Button>
                 </Stack>
             </Stack>

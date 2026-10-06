@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RuleIcon from '@mui/icons-material/Rule';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import {useNavigate, useParams} from 'react-router-dom';
 import {Editor} from '@monaco-editor/react';
 import ApiService from '../network/API';
@@ -92,6 +93,11 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             {showCriteriaButton && (
                 <Button size="small" variant="outlined" startIcon={<RuleIcon/>} onClick={() => navigate(`/problems/${problemId}/criteria`)}>
                     Критерии оценки
+                </Button>
+            )}
+            {isAdminUser && showCriteriaButton && (
+                <Button size="small" variant="contained" startIcon={<FactCheckIcon/>} onClick={() => navigate(`/admin/problems/${problemId}/grading`)}>
+                    Проверка работ
                 </Button>
             )}
             {!isAdminUser && pairInfo?.allowed && !pairInfo.partner && !pairInfo.partnerOf && !pairInfo.locked && !pairInfo.closed && (
