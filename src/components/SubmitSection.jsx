@@ -9,7 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { useTheme } from "@mui/material/styles";
 
-export function SubmitSection({ problem, handleSubmit }) {
+export function SubmitSection({ problem, handleSubmit, closed = false }) {
     const [secondsLeft, setSecondsLeft] = useState(problem.canSubmit.secondsLeft);
 
     const theme = useTheme();
@@ -30,6 +30,19 @@ export function SubmitSection({ problem, handleSubmit }) {
 
         return () => clearInterval(timer);
     }, [secondsLeft]);
+
+    if (closed) {
+        return (
+            <Button
+                variant="contained"
+                disabled
+                fullWidth={isMobile}
+                sx={{borderRadius: "12px", px: isMobile ? 2 : 3, py: 1.4, fontWeight: 600, textTransform: "none"}}
+            >
+                🔒 Приём решений закрыт
+            </Button>
+        );
+    }
 
     return (
         <Box>

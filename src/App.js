@@ -1,7 +1,7 @@
 import './App.css';
 import { ThemeProvider } from '@mui/material/styles';
 import {ArticlesPage} from "./pages/ArticlesPage";
-import {useEffect, useMemo, useState} from "react";
+import {Suspense, lazy, useEffect, useMemo, useState} from "react";
 import {Box, createTheme, CssBaseline} from "@mui/material";
 import {Header} from "./components/Header";
 import Footer from "./components/Footer";
@@ -18,6 +18,8 @@ import {GroupDetailsPage} from "./pages/GroupDetailsPage";
 import {AdminLabsPage} from "./pages/AdminLabsPage";
 import {AdminGitTasksPage} from "./pages/AdminGitTasksPage";
 import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
+import AdminCriteriaGradingPage from "./pages/AdminCriteriaGradingPage";
+import CriteriaPage from "./pages/CriteriaPage";
 import {PrivacyPage} from "./pages/PrivacyPage";
 import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
 import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
@@ -26,6 +28,9 @@ import YandexAdBlock from "./components/ads/YandexAdBlock";
 import FloorAdBlock from "./components/ads/FloorAdBlock";
 import InImageAdInjector from "./components/ads/InImageAdInjector";
 import {showOverlayAd} from "./components/ads/showOverlayAd";
+
+// Страница с графиками (recharts) грузится отдельным куском — основной бандл не раздуваем.
+const AdminLlmPage = lazy(() => import("./pages/AdminLlmPage"));
 
 const TOP_BANNER_BLOCK_ID = "R-A-20141312-3";
 
@@ -185,6 +190,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/articles" element={<ArticlesPage />} />
                     <Route path="/articles/:id" element={<ArticlesDetailsPage mode={mode}/>} />
                     <Route path="/problems/:problemId" element={<ProblemCodeDetailsPage mode={mode}/>} />
+                    <Route path="/problems/:problemId/criteria" element={<CriteriaPage />} />
                     <Route path="/articles/new" element={<CreateArticlePage />} />
                     <Route path="/articles/edit/:id" element={<CreateArticlePage />} />
                     <Route path="/tags/:id" element={<TagDetailsPage />} />
@@ -196,6 +202,8 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/admin/labs" element={<AdminLabsPage />} />
                     <Route path="/admin/git-tasks" element={<AdminGitTasksPage />} />
                     <Route path="/admin/mysql-tasks" element={<AdminMysqlTasksPage />} />
+                    <Route path="/admin/llm" element={<Suspense fallback={null}><AdminLlmPage /></Suspense>} />
+                    <Route path="/admin/problems/:problemId/grading" element={<AdminCriteriaGradingPage />} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/admin/courseworks" element={<AdminCourseworksPage />} />

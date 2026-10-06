@@ -262,6 +262,17 @@ export const Header = ({ mode, toggleTheme }) => {
                                     MySQL-базы
                                 </Button>
                             )}
+
+                            {ApiService.isAdmin() && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin/llm"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                    AI-расход
+                                </Button>
+                            )}
                         </Box>
                     ) : (
                         // Мобильная навигация (справа)
@@ -343,6 +354,15 @@ export const Header = ({ mode, toggleTheme }) => {
                                         onClick={handleMenuClose(setMobileMenuAnchor)}
                                     >
                                         MySQL-базы
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/llm"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        AI-расход
                                     </MenuItem>
                                 )}
                             </Menu>

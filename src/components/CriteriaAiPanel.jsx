@@ -1,0 +1,162 @@
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {
+    Alert, Box, Button, Chip, CircularProgress, Collapse, LinearProgress, Paper, Stack, Typography,
+} from '@mui/material';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import ApiService from '../network/API';
+
+const fmtTokens = (n) => (n >= 1000 ? `${Math.round(n / 100) / 10} тыс.` : String(n));
+
+const STATUS_LABEL = {OK: 'можно проверить', TOO_LARGE: 'слишком большая работа', EMPTY: 'нет работы', ERROR: 'ошибка'};
+
+// Панель AI-проверки на странице проверки работ: оценка объёма, запуск по всей задаче, прогресс.
+// AI ставит только черновики баллов — публикует преподаватель.
+const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
+    const [estimate, setEstimate] = useState(null);
+    const [estimating, setEstimating] = useState(false);
+    const [starting, setStarting] = useState(false);
+    const [error, setError] = useState(null);
+    const [showItems, setShowItems] = useState(false);
+    const wasRunning = useRef(false);
+
+    const job = status?.job;
+    const running = job?.state === 'RUNNING';
+    const config = status?.config;
+
+    const refresh = useCallback(() => ApiService.getCriteriaAiStatus(problemId).then(onStatusChange).catch(() => {}), [problemId, onStatusChange]);
+
+    useEffect(() => {
+        if (!running) {
+            if (wasRunning.current) {
+                wasRunning.current = false;
+                onFinished && onFinished();
+            }
+            return undefined;
+        }
+        wasRunning.current = true;
+        const timer = setInterval(refresh, 3000);
+        return () => clearInterval(timer);
+    }, [running, refresh, onFinished]);
+
+    const doEstimate = async () => {
+        setEstimating(true);
+        setError(null);
+        try {
+            setEstimate(await ApiService.getCriteriaAiEstimate(problemId));
+            setShowItems(true);
+        } catch (err) {
+            setError(err.message || err.reason || 'Не удалось оценить объём');
+        } finally {
+            setEstimating(false);
+        }
+    };
+
+    const start = async () => {
+        const text = estimate
+            ? `Проверить ${estimate.checkable} работ(ы), ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? Баллы появятся черновиками.`
+            : 'Запустить AI-проверку всех работ? Баллы появятся черновиками.';
+        if (!window.confirm(text)) return;
+        setStarting(true);
+        setError(null);
+        try {
+            await ApiService.runCriteriaAi(problemId, false);
+            await refresh();
+        } catch (err) {
+            setError(err.message || err.reason || 'Не удалось запустить проверку');
+        } finally {
+            setStarting(false);
+        }
+    };
+
+    return (
+        <Paper variant="outlined" sx={{p: 2, mb: 3, borderRadius: 3}}>
+            <Stack direction={{xs: 'column', sm: 'row'}} justifyContent="space-between" alignItems={{sm: 'center'}} gap={2}>
+                <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <AutoAwesomeIcon color="secondary"/>
+                        <Typography fontWeight={700}>AI-проверка</Typography>
+                        {config && (
+                            <Chip size="small" color={config.enabled ? 'success' : 'default'}
+                                  label={config.enabled ? `Включена${config.model ? ` · ${config.model}` : ''}` : 'Не настроена'}/>
+                        )}
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
+                        AI ставит черновики баллов по критериям, вы смотрите и публикуете. Баллы, которые вы уже сохранили
+                        вручную, AI не перезаписывает. Слишком большие работы пропускаются.
+                    </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} sx={{flexShrink: 0}}>
+                    <Button variant="outlined" startIcon={estimating ? <CircularProgress size={16}/> : <CalculateIcon/>}
+                            onClick={doEstimate} disabled={estimating || running}>
+                        Оценить объём
+                    </Button>
+                    <Button variant="contained" color="secondary" onClick={start}
+                            disabled={!config?.enabled || running || starting}>
+                        Проверить всех
+                    </Button>
+                </Stack>
+            </Stack>
+
+            {config && !config.enabled && (
+                <Alert severity="info" sx={{mt: 2}}>
+                    На сервере ещё не заданы LLM_BASE_URL, LLM_API_KEY и LLM_MODEL — запуск пока недоступен.
+                    Оценка объёма работает уже сейчас.
+                </Alert>
+            )}
+            {error && <Alert severity="error" sx={{mt: 2}} onClose={() => setError(null)}>{error}</Alert>}
+
+            {config?.monthlyTokenBudget > 0 && (
+                <Typography variant="caption" color="text.secondary" sx={{display: 'block', mt: 1.5}}>
+                    Токены в этом месяце: {fmtTokens(config.usedTokensThisMonth)} из {fmtTokens(config.monthlyTokenBudget)}
+                </Typography>
+            )}
+
+            {job && (
+                <Box sx={{mt: 2}}>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2">
+                            {running ? 'Идёт проверка…' : job.state === 'DONE' ? 'Проверка завершена' : 'Проверка прервана'}
+                            {' '}{job.done} из {job.total}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            оценено {job.ok} · пропущено {job.skipped} · ошибок {job.errors}
+                        </Typography>
+                    </Stack>
+                    <LinearProgress variant="determinate" value={job.total ? (job.done / job.total) * 100 : 100}
+                                    color={job.errors > 0 ? 'warning' : 'secondary'} sx={{mt: 0.5, height: 6, borderRadius: 3}}/>
+                    {job.message && <Alert severity="error" sx={{mt: 1}}>{job.message}</Alert>}
+                </Box>
+            )}
+
+            {estimate && (
+                <Box sx={{mt: 2}}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        <Chip label={`Работ: ${estimate.students}`}/>
+                        <Chip color="success" variant="outlined" label={`Можно проверить: ${estimate.checkable}`}/>
+                        <Chip color="warning" variant="outlined" label={`Слишком большие: ${estimate.tooLarge}`}/>
+                        <Chip variant="outlined" label={`Пустые: ${estimate.empty}`}/>
+                        <Chip color="primary" label={`≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход`}/>
+                    </Stack>
+                    <Button size="small" onClick={() => setShowItems((v) => !v)} sx={{mt: 1}}>
+                        {showItems ? 'Скрыть список' : 'Показать по студентам'}
+                    </Button>
+                    <Collapse in={showItems}>
+                        <Stack spacing={0.5} sx={{mt: 1}}>
+                            {estimate.items.map((i) => (
+                                <Stack key={i.userId} direction="row" justifyContent="space-between" gap={2}>
+                                    <Typography variant="body2">{i.fullName}</Typography>
+                                    <Typography variant="body2" color={i.status === 'OK' ? 'text.secondary' : 'warning.main'}>
+                                        {i.status === 'OK' ? `≈ ${fmtTokens(i.estimatedTokens)}` : (i.message || STATUS_LABEL[i.status])}
+                                    </Typography>
+                                </Stack>
+                            ))}
+                        </Stack>
+                    </Collapse>
+                </Box>
+            )}
+        </Paper>
+    );
+};
+
+export default CriteriaAiPanel;

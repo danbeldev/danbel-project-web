@@ -11,6 +11,7 @@ import {
     Paper,
     Box,
     CircularProgress,
+    Button,
     Link as MuiLink,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -63,6 +64,7 @@ export const AdminGitTasksPage = () => {
                                 <TableCell>Задача</TableCell>
                                 <TableCell>Репозиторий</TableCell>
                                 <TableCell>Создан</TableCell>
+                                <TableCell>Проверка</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -87,6 +89,11 @@ export const AdminGitTasksPage = () => {
                                     </TableCell>
                                     <TableCell>
                                         {format(new Date(t.createdAt), 'd MMM yyyy, HH:mm', { locale: ru })}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button size="small" onClick={() => navigate(`/admin/problems/${t.problemId}/grading`)}>
+                                            По критериям
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}

@@ -4,6 +4,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ApiService from '../network/API';
+import {showFullscreenAd} from './ads/showFullscreenAd';
 import ProblemLimitsCard from './ProblemLimitsCard';
 import { copyToClipboard } from '../copyToClipboard';
 
@@ -28,6 +29,8 @@ const GitTaskPanel = ({ problem }) => {
     }, [problem.id]);
 
     const handleCreate = async () => {
+        // Полноэкранная реклама на действии — частоту ограничивает сам блок в кабинете.
+        showFullscreenAd();
         setCreating(true);
         setError(null);
         try {

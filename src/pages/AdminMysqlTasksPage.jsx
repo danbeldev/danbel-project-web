@@ -11,6 +11,7 @@ import {
     Paper,
     Box,
     CircularProgress,
+    Button,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -64,6 +65,7 @@ export const AdminMysqlTasksPage = () => {
                                 <TableCell>Пароль</TableCell>
                                 <TableCell>Хост:порт</TableCell>
                                 <TableCell>Создана</TableCell>
+                                <TableCell>Проверка</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -87,6 +89,11 @@ export const AdminMysqlTasksPage = () => {
                                     <TableCell sx={{ fontFamily: 'monospace' }}>{t.host}:{t.port}</TableCell>
                                     <TableCell>
                                         {format(new Date(t.createdAt), 'd MMM yyyy, HH:mm', { locale: ru })}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button size="small" onClick={() => navigate(`/admin/problems/${t.problemId}/grading`)}>
+                                            По критериям
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))}

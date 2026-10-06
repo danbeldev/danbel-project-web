@@ -11,9 +11,11 @@ import {
     useTheme,
     useMediaQuery,
     Tabs,
-    Tab, Checkbox, Card, CardContent, FormControlLabel, Stack
+    Tab, Checkbox, Card, CardContent, FormControlLabel, Stack, Button
 } from '@mui/material';
-import {useParams} from 'react-router-dom';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import RuleIcon from '@mui/icons-material/Rule';
+import {useNavigate, useParams} from 'react-router-dom';
 import {Editor} from '@monaco-editor/react';
 import ApiService from '../network/API';
 import {difficultyTranslation, getDifficultyColor} from "./ArticlesDetailsPage";
@@ -27,14 +29,86 @@ import LabPanel from "../components/LabPanel";
 import GitTaskPanel from "../components/GitTaskPanel";
 import MysqlTaskPanel from "../components/MysqlTaskPanel";
 import SubmitStatusChip from "../components/SubmitStatusChip";
+import DeadlineBanner, {useDeadline} from "../components/DeadlineBanner";
+import ProblemRulesDialog from "../components/ProblemRulesDialog";
 import {showFullscreenAd} from "../components/ads/showFullscreenAd";
 
 const NO_SUBMIT_TYPES = ['SSH_LAB', 'GIT_REPO', 'MYSQL_DB'];
+const CRITERIA_TYPES = ['MYSQL_DB', 'GIT_REPO'];
 const PENDING_STATUSES = ['PENDING', 'RUNNING'];
 
 export const ProblemCodeDetailsPage = ({mode}) => {
     const {problemId} = useParams();
     const [problem, setProblem] = useState(null);
+    const deadline = useDeadline(problem?.articleId);
+    const [rulesOpen, setRulesOpen] = useState(false);
+    const [pairInfo, setPairInfo] = useState(null);
+    const [hasCriteria, setHasCriteria] = useState(false);
+    const navigate = useNavigate();
+
+    const rulesSeenKey = `rulesSeen:${localStorage.getItem('userId')}:${problemId}`;
+
+    const loadPairInfo = () => ApiService.getPair(problemId).then(setPairInfo).catch(() => {});
+
+    // Информационный диалог показываем один раз на задачу и аккаунт; дальше он доступен
+    // по кнопке «Правила и оценка».
+    useEffect(() => {
+        if (!problem || !localStorage.getItem('accessToken') || ApiService.isAdmin()) return;
+        loadPairInfo();
+        try {
+            if (!localStorage.getItem(rulesSeenKey)) setRulesOpen(true);
+        } catch (e) {
+            // localStorage недоступен — просто не показываем автоматически
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [problem, problemId]);
+
+    // Критерии оценки пока включены для MySQL- и git-задач; студенту кнопка нужна, только если они заведены.
+    useEffect(() => {
+        if (!problem || !CRITERIA_TYPES.includes(problem.type) || !localStorage.getItem('accessToken') || ApiService.isAdmin()) return;
+        ApiService.getMyCriteria(problemId)
+            .then((view) => setHasCriteria(view.criteria.length > 0 || view.hiddenCount > 0))
+            .catch(() => setHasCriteria(false));
+    }, [problem, problemId]);
+
+    const closeRules = () => {
+        setRulesOpen(false);
+        try {
+            localStorage.setItem(rulesSeenKey, '1');
+        } catch (e) {
+            // не критично
+        }
+    };
+
+    const isAdminUser = ApiService.isAdmin();
+    const showCriteriaButton = CRITERIA_TYPES.includes(problem?.type) && (isAdminUser || hasCriteria);
+    const rulesBar = (!isAdminUser || showCriteriaButton) && (
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{mb: 1}}>
+            {!isAdminUser && (
+                <Button size="small" variant="outlined" startIcon={<InfoOutlinedIcon/>} onClick={() => setRulesOpen(true)}>
+                    Правила и оценка
+                </Button>
+            )}
+            {showCriteriaButton && (
+                <Button size="small" variant="outlined" startIcon={<RuleIcon/>} onClick={() => navigate(`/problems/${problemId}/criteria`)}>
+                    Критерии оценки
+                </Button>
+            )}
+            {!isAdminUser && pairInfo?.allowed && !pairInfo.partner && !pairInfo.partnerOf && !pairInfo.locked && !pairInfo.closed && (
+                <Chip color="success" onClick={() => setRulesOpen(true)}
+                      sx={{fontWeight: 700}}
+                      label="👥 Работа в паре разрешена — укажите напарника"/>
+            )}
+            {!isAdminUser && pairInfo?.partner && (
+                <Chip size="small" color="primary" onClick={() => setRulesOpen(true)}
+                      label={`Пара: ${pairInfo.partner.fullName || pairInfo.partner.username}`}/>
+            )}
+            {!isAdminUser && pairInfo?.partnerOf && (
+                <Chip size="small" color="primary" onClick={() => setRulesOpen(true)}
+                      label={`Вы напарник: ${pairInfo.partnerOf.fullName || pairInfo.partnerOf.username}`}/>
+            )}
+        </Stack>
+    );
     const [languages, setLanguages] = useState([]);
     const [selectedLanguage, setSelectedLanguage] = useState(2);
     const [code, setCode] = useState('');
@@ -86,10 +160,20 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     const handleSubmit = async () => {
         showFullscreenAd();
 
-        const submissionId = await ApiService.submitSolution(problemId, {
-            code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : code,
-            languageId: selectedLanguage,
-        });
+        let submissionId;
+        try {
+            submissionId = await ApiService.submitSolution(problemId, {
+                code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : code,
+                languageId: selectedLanguage,
+            });
+        } catch (err) {
+            // Срок сдачи лекции для группы студента прошёл (сервер отвечает 403 с этим reason).
+            if (err?.reason === 'Приём решений закрыт') {
+                alert('Приём решений закрыт — срок сдачи этой лекции для вашей группы истёк.');
+                return;
+            }
+            throw err;
+        }
 
         const updatedSubs = await ApiService.getSubmissions(problemId);
         setSubmissions(updatedSubs);
@@ -196,6 +280,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
                     {mobileTab === 0 && (
                         <Box p={2}>
+                            <DeadlineBanner deadline={deadline} compact/>
+                            {rulesBar}
                             <Typography variant="h5" gutterBottom>
                                 {problem.title}
                             </Typography>
@@ -237,6 +323,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
                     {mobileTab === 1 && (
                         <Box p={2}>
+                            <DeadlineBanner deadline={deadline} compact/>
                             {problem.type === 'INPUT' &&
                                 <>
                                     <div style={{width: '10px'}}/>
@@ -262,7 +349,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                             }
 
                             {!NO_SUBMIT_TYPES.includes(problem.type) &&
-                                <SubmitSection problem={problem} handleSubmit={handleSubmit} />
+                                <SubmitSection problem={problem} handleSubmit={handleSubmit} closed={deadline.closed} />
                             }
 
                             <Box
@@ -343,6 +430,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                     {/* Левая часть: условия задачи */}
                     <Grid item xs={5} sx={{overflowY: 'auto', borderRight: '1px solid #eee', p: 3, width: '40%'}}>
                       <Box sx={{maxWidth: 720, mx: 'auto'}}>
+                        <DeadlineBanner deadline={deadline} compact/>
+                        {rulesBar}
                         <Typography variant="h4" gutterBottom>
                             {problem.title}
                         </Typography>
@@ -413,7 +502,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     </FormControl>
                                 }
 
-                                <SubmitSection problem={problem} handleSubmit={handleSubmit} />
+                                <SubmitSection problem={problem} handleSubmit={handleSubmit} closed={deadline.closed} />
 
                                 {problem.type === 'INPUT' &&
                                     <>
@@ -499,6 +588,16 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                     </Grid>
                 </Grid>
             )}
+
+            <ProblemRulesDialog
+                hasCriteria={hasCriteria}
+                criteriaUrl={`/problems/${problemId}/criteria`}
+                open={rulesOpen}
+                onClose={closeRules}
+                problemId={problemId}
+                deadline={deadline}
+                onPairChanged={loadPairInfo}
+            />
 
             <SubmissionDetailsDialog
                 open={openModal}

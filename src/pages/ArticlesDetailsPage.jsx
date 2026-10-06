@@ -20,6 +20,8 @@ import EvaluationDisplay from "../components/EvaluationDisplay";
 import SubmitStatusChip from "../components/SubmitStatusChip";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import YandexAdBlock from "../components/ads/YandexAdBlock";
+import DeadlineBanner from "../components/DeadlineBanner";
+import AdminGradesExport from "../components/AdminGradesExport";
 
 const FEED_BLOCK_ID = "R-A-20141312-5";
 
@@ -123,6 +125,12 @@ export const ArticlesDetailsPage = ({mode}) => {
                 </Box>
             )}
 
+            {problems.length > 0 && (
+                <Box sx={{display: 'flex', justifyContent: 'flex-end', mb: 1}}>
+                    <AdminGradesExport articleId={article.id}/>
+                </Box>
+            )}
+
             {/* Заголовок */}
             <Typography variant="h4" component="h1" gutterBottom>
                 {article.title}
@@ -168,6 +176,8 @@ export const ArticlesDetailsPage = ({mode}) => {
             {evaluation &&
                 <EvaluationDisplay value={evaluation.evaluation}/>
             }
+
+            {problems.length > 0 && <DeadlineBanner articleId={article.id}/>}
 
             <Divider sx={{my: 3}}/>
 

@@ -18,6 +18,7 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import StorageIcon from '@mui/icons-material/Storage';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import ApiService from '../network/API';
+import {showFullscreenAd} from './ads/showFullscreenAd';
 import LabTerminal from './LabTerminal';
 import ProblemLimitsCard from './ProblemLimitsCard';
 
@@ -80,6 +81,8 @@ const LabPanel = ({ problem }) => {
     }, [problem.id]);
 
     const handleStart = async () => {
+        // Полноэкранная реклама на действии — частоту ограничивает сам блок в кабинете.
+        showFullscreenAd();
         setStarting(true);
         setError(null);
         try {

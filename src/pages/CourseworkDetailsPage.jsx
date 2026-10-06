@@ -19,6 +19,8 @@ import {
     Link as MuiLink,
     Snackbar,
     Alert,
+    ToggleButton,
+    ToggleButtonGroup,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -38,6 +40,7 @@ export const CourseworkDetailsPage = () => {
     const [savingUserId, setSavingUserId] = useState(null);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
+    const [groupFilter, setGroupFilter] = useState('all');
 
     const load = () => {
         ApiService.getCourseworkById(id)
@@ -105,6 +108,8 @@ export const CourseworkDetailsPage = () => {
         );
     }
 
+    const visibleRows = groupFilter === 'all' ? rows : rows.filter((r) => r.groupName === groupFilter);
+
     return (
         <Container maxWidth="lg" sx={{py: 4}}>
             <Breadcrumbs sx={{mb: 2}}>
@@ -117,9 +122,28 @@ export const CourseworkDetailsPage = () => {
             <Typography variant="h5" fontWeight={700} sx={{mb: 1}}>
                 {coursework.title}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{mb: 3}}>
-                Группы: {coursework.groups.map((g) => g.name).join(', ') || '—'}
-            </Typography>
+            {coursework.groups.length > 1 ? (
+                <Box sx={{mb: 3, overflowX: 'auto'}}>
+                    <ToggleButtonGroup
+                        size="small"
+                        exclusive
+                        color="primary"
+                        value={groupFilter}
+                        onChange={(_, v) => v && setGroupFilter(v)}
+                    >
+                        <ToggleButton value="all">Все ({rows.length})</ToggleButton>
+                        {coursework.groups.map((g) => (
+                            <ToggleButton key={g.id ?? g.name} value={g.name}>
+                                {g.name} ({rows.filter((r) => r.groupName === g.name).length})
+                            </ToggleButton>
+                        ))}
+                    </ToggleButtonGroup>
+                </Box>
+            ) : (
+                <Typography variant="body2" color="text.secondary" sx={{mb: 3}}>
+                    Группы: {coursework.groups.map((g) => g.name).join(', ') || '—'}
+                </Typography>
+            )}
 
             <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
@@ -135,7 +159,7 @@ export const CourseworkDetailsPage = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {rows.map((row) => {
+                        {visibleRows.map((row) => {
                             const busy = savingUserId === row.userId;
                             return (
                                 <TableRow key={row.userId} hover>

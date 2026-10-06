@@ -14,6 +14,8 @@ import {
 import ImageIcon from '@mui/icons-material/Image';
 import {useForm, Controller} from 'react-hook-form';
 import {useNavigate, useParams} from 'react-router-dom';
+import AdminDeadlines from '../components/AdminDeadlines';
+import AdminPairWork from '../components/AdminPairWork';
 import ApiService from '../network/API';
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -376,6 +378,9 @@ const CreateArticlePage = () => {
                     </Alert>
                 </Snackbar>
             </Box>
+
+            {id && <AdminDeadlines articleId={id}/>}
+            {id && <AdminPairWork articleId={id}/>}
         </Container>
     );
 };

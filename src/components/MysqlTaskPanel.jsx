@@ -3,6 +3,7 @@ import { Box, Button, Typography, CircularProgress, Alert, Stack, IconButton } f
 import StorageIcon from '@mui/icons-material/Storage';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ApiService from '../network/API';
+import {showFullscreenAd} from './ads/showFullscreenAd';
 import ProblemLimitsCard from './ProblemLimitsCard';
 import { copyToClipboard } from '../copyToClipboard';
 
@@ -21,6 +22,8 @@ const MysqlTaskPanel = ({ problem }) => {
     }, [problem.id]);
 
     const handleCreate = async () => {
+        // Полноэкранная реклама на действии — частоту ограничивает сам блок в кабинете.
+        showFullscreenAd();
         setCreating(true);
         setError(null);
         try {
@@ -44,6 +47,7 @@ const MysqlTaskPanel = ({ problem }) => {
     }
 
     return (
+        <>
         <Box sx={{ p: 3 }}>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -102,6 +106,7 @@ const MysqlTaskPanel = ({ problem }) => {
                 </Stack>
             )}
         </Box>
+        </>
     );
 };
 

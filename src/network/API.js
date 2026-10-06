@@ -321,6 +321,242 @@ const ApiService = {
         }
     },
 
+    getGradingRules: async () => {
+        try {
+            const response = await api.get(`/problems/grading-rules`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getPair: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/pair`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getPairCandidates: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/pair/candidates`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setPair: async (problemId, partnerId) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/pair`, { partnerId });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    removePair: async (problemId) => {
+        try {
+            const response = await api.delete(`/problems/${problemId}/pair`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setPairAllowed: async (problemId, allowed) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/pair-allowed`, { allowed });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getPairPermissions: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/pair-permissions`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setPairPermission: async (problemId, userId, allowed) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/pair-permissions/${userId}`, { allowed });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    removePairPermission: async (problemId, userId) => {
+        try {
+            const response = await api.delete(`/problems/${problemId}/pair-permissions/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getPairs: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/pairs`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    removePairByAdmin: async (problemId, ownerId) => {
+        try {
+            const response = await api.delete(`/problems/${problemId}/pairs/${ownerId}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMyDeadline: async (articleId) => {
+        try {
+            const response = await api.get(`/articles/${articleId}/deadline`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getDeadlines: async (articleId) => {
+        try {
+            const response = await api.get(`/articles/${articleId}/deadlines`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setDeadline: async (articleId, groupId, closesAt) => {
+        try {
+            const response = await api.put(`/articles/${articleId}/groups/${groupId}/deadline`, { closesAt });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // Критерии задания (рубрика). Студент: getMyCriteria; преподаватель: остальные.
+    getMyCriteria: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/criteria`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getCriteria: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/criteria/all`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setCriteria: async (problemId, criteria) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/criteria`, criteria);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getCriteriaGrading: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/criteria/grading`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getLlmUsage: async (days = 30) => {
+        try {
+            const response = await api.get('/admin/llm/usage', {params: {days}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // AI-проверка критериев (черновики баллов): статус/настройки, оценка объёма, запуск.
+    getCriteriaAiStatus: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/criteria/ai/status`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getCriteriaAiEstimate: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/criteria/ai/estimate`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    runCriteriaAi: async (problemId, force = false) => {
+        try {
+            const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: {force}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    runCriteriaAiForUser: async (problemId, userId, force = true) => {
+        try {
+            const response = await api.post(`/problems/${problemId}/criteria/ai/run/${userId}`, null, {params: {force}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    saveCriteriaResults: async (problemId, userId, data) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/criteria/grading/${userId}`, data);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getGradesReport: async (articleId, groupId) => {
+        try {
+            const response = await api.get(`/articles/${articleId}/groups/${groupId}/grades-report`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    recalculateGroupGrades: async (articleId, groupId) => {
+        try {
+            const response = await api.post(`/articles/${articleId}/groups/${groupId}/calculate-grade`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     setEvaluation: async (userId, articleId, grade) => {
         try {
             const response = await api.put(`/users/${userId}/evaluations/${articleId}`, { grade });
