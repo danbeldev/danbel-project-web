@@ -103,7 +103,9 @@ const AdminCriteriaGradingPage = () => {
                 Баллы студенту и оценке лекции открываются только после «Опубликовать»; если у студента есть напарник, баллы засчитываются и ему.
             </Typography>
 
-            <CriteriaAiPanel problemId={problemId} status={aiStatus} onStatusChange={setAiStatus} onFinished={load}/>
+            {data.problemType === 'MYSQL_DB' && (
+                <CriteriaAiPanel problemId={problemId} status={aiStatus} onStatusChange={setAiStatus} onFinished={load}/>
+            )}
 
             {data.criteria.length === 0 && (
                 <Alert severity="warning">У задачи нет критериев — добавьте их на странице задачи.</Alert>
@@ -132,7 +134,8 @@ const AdminCriteriaGradingPage = () => {
                                       title={lastRun(s.userId).message || ''}
                                       label={{OK: 'AI проверил', SKIPPED: 'AI пропустил', ERROR: 'AI: ошибка'}[lastRun(s.userId).status] || lastRun(s.userId).status}/>
                             )}
-                            <Chip size="small" color={s.published ? 'success' : 'default'} label={s.published ? 'Опубликовано' : 'Черновик'}/>
+                            <Chip size="small" color={s.published ? 'success' : 'default'}
+                                  label={s.published ? (s.autoPublished ? 'Опубликовано AI' : 'Опубликовано') : 'Черновик'}/>
                         </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -176,11 +179,13 @@ const AdminCriteriaGradingPage = () => {
                                 );
                             })}
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                {data.problemType === 'MYSQL_DB' && (
                                 <Button color="secondary" startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
-                                        disabled={!aiStatus?.config?.enabled || aiBusyId === s.userId || s.published}
+                                        disabled={data.problemType !== 'MYSQL_DB' || !aiStatus?.config?.enabled || aiBusyId === s.userId || s.published}
                                         onClick={() => runAiForStudent(s)}>
                                     Проверить AI
                                 </Button>
+                                )}
                                 <Button disabled={busyId === s.userId} onClick={() => save(s, undefined)}>Сохранить</Button>
                                 {s.published ? (
                                     <Button color="warning" disabled={busyId === s.userId} onClick={() => save(s, false)}>Снять публикацию</Button>

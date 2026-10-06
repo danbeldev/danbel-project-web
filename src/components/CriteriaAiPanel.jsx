@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
-    Alert, Box, Button, Chip, CircularProgress, Collapse, LinearProgress, Paper, Stack, Typography,
+    Alert, Box, Button, Chip, CircularProgress, Collapse, FormControlLabel, LinearProgress, Paper, Stack, Switch, Typography,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CalculateIcon from '@mui/icons-material/Calculate';
@@ -18,6 +18,7 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
     const [starting, setStarting] = useState(false);
     const [error, setError] = useState(null);
     const [showItems, setShowItems] = useState(false);
+    const [togglingAuto, setTogglingAuto] = useState(false);
     const wasRunning = useRef(false);
 
     const job = status?.job;
@@ -39,6 +40,20 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
         return () => clearInterval(timer);
     }, [running, refresh, onFinished]);
 
+    const toggleAutoPublish = async (enabled) => {
+        if (enabled && !window.confirm('Включить автопубликацию? После AI-проверки студенты сразу увидят баллы и комментарии, а оценка лекции пересчитается. Баллы, которые вы выставили вручную, и уже опубликованные проверки AI не трогает.')) return;
+        setTogglingAuto(true);
+        setError(null);
+        try {
+            await ApiService.setCriteriaAiAutoPublish(problemId, enabled);
+            await refresh();
+        } catch (err) {
+            setError(err.message || err.reason || 'Не удалось изменить настройку');
+        } finally {
+            setTogglingAuto(false);
+        }
+    };
+
     const doEstimate = async () => {
         setEstimating(true);
         setError(null);
@@ -53,9 +68,10 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
     };
 
     const start = async () => {
+        const where = status?.autoPublish ? 'Баллы будут ОПУБЛИКОВАНЫ автоматически.' : 'Баллы появятся черновиками.';
         const text = estimate
-            ? `Проверить ${estimate.checkable} работ(ы), ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? Баллы появятся черновиками.`
-            : 'Запустить AI-проверку всех работ? Баллы появятся черновиками.';
+            ? `Проверить ${estimate.checkable} работ(ы), ≈ ${fmtTokens(estimate.totalEstimatedInputTokens)} токенов на вход? ${where}`
+            : `Запустить AI-проверку всех работ? ${where}`;
         if (!window.confirm(text)) return;
         setStarting(true);
         setError(null);
@@ -82,8 +98,8 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
                         )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
-                        AI ставит черновики баллов по критериям, вы смотрите и публикуете. Баллы, которые вы уже сохранили
-                        вручную, AI не перезаписывает. Слишком большие работы пропускаются.
+                        AI ставит баллы и комментарии по критериям. Баллы, которые вы уже сохранили вручную, AI не
+                        перезаписывает, слишком большие работы пропускаются. Пока доступно для MySQL-задач.
                     </Typography>
                 </Box>
                 <Stack direction="row" spacing={1} sx={{flexShrink: 0}}>
@@ -97,6 +113,15 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
                     </Button>
                 </Stack>
             </Stack>
+
+            <FormControlLabel
+                sx={{mt: 1.5, display: 'flex'}}
+                control={<Switch checked={!!status?.autoPublish} disabled={togglingAuto || !status}
+                                 onChange={(e) => toggleAutoPublish(e.target.checked)}/>}
+                label={status?.autoPublish
+                    ? 'Автопубликация включена — студенты видят результат сразу после AI-проверки'
+                    : 'Публиковать результат автоматически (иначе — черновик, который публикуете вы)'}
+            />
 
             {config && !config.enabled && (
                 <Alert severity="info" sx={{mt: 2}}>
@@ -120,7 +145,7 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished}) => {
                             {' '}{job.done} из {job.total}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            оценено {job.ok} · пропущено {job.skipped} · ошибок {job.errors}
+                            оценено {job.ok} · опубликовано {job.published} · пропущено {job.skipped} · ошибок {job.errors}
                         </Typography>
                     </Stack>
                     <LinearProgress variant="determinate" value={job.total ? (job.done / job.total) * 100 : 100}

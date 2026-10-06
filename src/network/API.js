@@ -512,6 +512,15 @@ const ApiService = {
         }
     },
 
+    setCriteriaAiAutoPublish: async (problemId, enabled) => {
+        try {
+            const response = await api.put(`/problems/${problemId}/criteria/ai/auto-publish`, {enabled});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     runCriteriaAi: async (problemId, force = false) => {
         try {
             const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: {force}});
