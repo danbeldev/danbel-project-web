@@ -22,6 +22,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import YandexAdBlock from "../components/ads/YandexAdBlock";
 import DeadlineBanner from "../components/DeadlineBanner";
 import AdminGradesExport from "../components/AdminGradesExport";
+import AdminGradesReportSend from "../components/AdminGradesReportSend";
 
 const FEED_BLOCK_ID = "R-A-20141312-5";
 
@@ -126,7 +127,8 @@ export const ArticlesDetailsPage = ({mode}) => {
             )}
 
             {problems.length > 0 && (
-                <Box sx={{display: 'flex', justifyContent: 'flex-end', mb: 1}}>
+                <Box sx={{display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap', mb: 1}}>
+                    <AdminGradesReportSend articleId={article.id}/>
                     <AdminGradesExport articleId={article.id}/>
                 </Box>
             )}
