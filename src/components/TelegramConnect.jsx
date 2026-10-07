@@ -67,17 +67,7 @@ const useTelegramLink = () => {
         }
     }, [refresh, stopPolling]);
 
-    const disconnect = useCallback(async () => {
-        setError('');
-        try {
-            await ApiService.unlinkTelegram();
-            await refresh();
-        } catch (e) {
-            setError(typeof e === 'string' ? e : (e?.message || 'Не удалось отвязать'));
-        }
-    }, [refresh]);
-
-    return {status, waiting, error, linkUrl, connect, disconnect, refresh};
+    return {status, waiting, error, linkUrl, connect, refresh};
 };
 
 const connected = (s) => !!(s && s.linked && s.enabled);
@@ -188,7 +178,7 @@ export const TelegramConnectDialog = () => {
             <DialogContent sx={{px: 3, pt: 3, pb: 1}}>
                 {done ? (
                     <Typography color="text.secondary" sx={{textAlign: 'center', py: 1}}>
-                        Отключить уведомления можно в профиле или командой /stop в боте.
+                        Баллы, сроки сдачи и другие важные события будут приходить сюда.
                     </Typography>
                 ) : waiting ? (
                     <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.75, py: 0.5}}>
@@ -236,7 +226,7 @@ export const TelegramConnectDialog = () => {
 
 // Блок в профиле: статус, кнопка подключения и отключение.
 export const TelegramConnectCard = () => {
-    const {status, waiting, error, linkUrl, connect, disconnect, refresh} = useTelegramLink();
+    const {status, waiting, error, linkUrl, connect, refresh} = useTelegramLink();
 
     useEffect(() => {
         refresh();
@@ -252,7 +242,6 @@ export const TelegramConnectCard = () => {
                         <CheckCircleIcon color="success" fontSize="small"/>
                         Telegram подключён{status.username ? ` (@${status.username})` : ''}
                     </Typography>
-                    <Button size="small" color="inherit" onClick={disconnect} sx={{mt: 0.5}}>Отключить</Button>
                 </>
             ) : (
                 <>

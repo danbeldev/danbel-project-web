@@ -502,14 +502,6 @@ const ApiService = {
         }
     },
 
-    unlinkTelegram: async () => {
-        try {
-            await api.delete('/notifications/telegram');
-        } catch (error) {
-            throw error.response?.data || error.message;
-        }
-    },
-
     getLlmUsage: async (days = 30) => {
         try {
             const response = await api.get('/admin/llm/usage', {params: {days}});
