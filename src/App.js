@@ -20,6 +20,7 @@ import {AdminGitTasksPage} from "./pages/AdminGitTasksPage";
 import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
 import AdminCriteriaGradingPage from "./pages/AdminCriteriaGradingPage";
 import CriteriaPage from "./pages/CriteriaPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import RequireAuth from "./components/RequireAuth";
 import {TelegramConnectDialog} from "./components/TelegramConnect";
 import {PrivacyPage} from "./pages/PrivacyPage";
@@ -206,6 +207,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/admin/mysql-tasks" element={<RequireAuth><AdminMysqlTasksPage /></RequireAuth>} />
                     <Route path="/admin/llm" element={<RequireAuth><Suspense fallback={null}><AdminLlmPage /></Suspense></RequireAuth>} />
                     <Route path="/admin/problems/:problemId/grading" element={<RequireAuth><AdminCriteriaGradingPage /></RequireAuth>} />
+                    <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/admin/courseworks" element={<RequireAuth><AdminCourseworksPage /></RequireAuth>} />

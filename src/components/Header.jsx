@@ -407,6 +407,10 @@ export const Header = ({ mode, toggleTheme }) => {
                                     handleClose()
                                     navigate('/profile')
                                 }}>Профиль</MenuItem>
+                                <MenuItem onClick={() => {
+                                    handleClose()
+                                    navigate('/notifications')
+                                }}>Уведомления</MenuItem>
                                 <MenuItem onClick={handleLogout}>Выйти</MenuItem>
                             </Menu>
                         </Box>

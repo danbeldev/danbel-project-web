@@ -502,6 +502,16 @@ const ApiService = {
         }
     },
 
+    // Уведомления: свои или (all=true, только админ) всех пользователей; onlyFailed — только с ошибкой доставки.
+    getNotifications: async ({page = 0, size = 30, onlyFailed = false, all = false} = {}) => {
+        try {
+            const response = await api.get(all ? '/admin/notifications' : '/notifications', {params: {page, size, onlyFailed}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getLlmUsage: async (days = 30) => {
         try {
             const response = await api.get('/admin/llm/usage', {params: {days}});
