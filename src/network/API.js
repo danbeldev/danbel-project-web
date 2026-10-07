@@ -539,6 +539,15 @@ const ApiService = {
         }
     },
 
+    sendMaxWelcome: async (groupId) => {
+        try {
+            const response = await api.post(`/admin/max/groups/${groupId}/welcome`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getGroupMessages: async ({page = 0, size = 30, onlyFailed = false} = {}) => {
         try {
             const response = await api.get('/admin/group-messages', {params: {page, size, onlyFailed}});

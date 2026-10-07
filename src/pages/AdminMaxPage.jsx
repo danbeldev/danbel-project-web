@@ -89,6 +89,17 @@ const AdminMaxPage = () => {
         }
     };
 
+    const welcome = async (groupId, groupName) => {
+        if (!window.confirm(`Отправить в чат группы ${groupName} приветствие бота (что он будет присылать)?`)) return;
+        try {
+            const r = await ApiService.sendMaxWelcome(groupId);
+            setInfo(r.queued ? 'Приветствие поставлено в очередь, оно придёт в течение нескольких секунд.' : 'У группы нет привязанного чата.');
+            setTimeout(() => loadMessages(0, true), 5000);
+        } catch (e) {
+            setError(errText(e, 'Не удалось отправить приветствие'));
+        }
+    };
+
     if (!status && !error) return <Box sx={{textAlign: 'center', py: 8}}><CircularProgress/></Box>;
 
     return (
@@ -114,7 +125,7 @@ const AdminMaxPage = () => {
                         Бот: <b>{status.botName}</b>{status.botUsername ? ` (@${status.botUsername})` : ''}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
-                        Добавьте бота в чат группы в Max и сделайте его администратором — чат появится в списке ниже.
+                        Добавьте бота в чат группы в Max и сделайте его администратором — чат появится в списке ниже. При привязке чата к группе бот сам отправит в чат приветствие с описанием уведомлений; кнопка «Приветствие» отправит его повторно.
                     </Typography>
                 </Paper>
             )}
@@ -141,6 +152,10 @@ const AdminMaxPage = () => {
                             <Button size="small" variant="outlined" startIcon={<SendIcon/>} disabled={c.groupId == null}
                                     onClick={() => test(c.groupId)}>
                                 Тест
+                            </Button>
+                            <Button size="small" variant="outlined" disabled={c.groupId == null}
+                                    onClick={() => welcome(c.groupId, c.groupName)}>
+                                Приветствие
                             </Button>
                         </Box>
                     </Paper>
