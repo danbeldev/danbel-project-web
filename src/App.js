@@ -21,7 +21,7 @@ import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
 import AdminCriteriaGradingPage from "./pages/AdminCriteriaGradingPage";
 import CriteriaPage from "./pages/CriteriaPage";
 import NotificationsPage from "./pages/NotificationsPage";
-import AdminMaxPage from "./pages/AdminMaxPage";
+import AdminMessengersPage from "./pages/AdminMessengersPage";
 import RequireAuth from "./components/RequireAuth";
 import {TelegramConnectDialog} from "./components/TelegramConnect";
 import {PrivacyPage} from "./pages/PrivacyPage";
@@ -209,8 +209,9 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/admin/llm" element={<RequireAuth><Suspense fallback={null}><AdminLlmPage /></Suspense></RequireAuth>} />
                     <Route path="/admin/problems/:problemId/grading" element={<RequireAuth><AdminCriteriaGradingPage /></RequireAuth>} />
                     <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
-                    <Route path="/admin/max" element={<RequireAuth><AdminMaxPage /></RequireAuth>} />
-                    <Route path="/admin/chats" element={<RequireAuth><AdminMaxPage /></RequireAuth>} />
+                    <Route path="/admin/messengers" element={<RequireAuth><AdminMessengersPage /></RequireAuth>} />
+                    <Route path="/admin/max" element={<Navigate to="/admin/messengers?tab=groups" replace />} />
+                    <Route path="/admin/chats" element={<Navigate to="/admin/messengers?tab=groups" replace />} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/admin/courseworks" element={<RequireAuth><AdminCourseworksPage /></RequireAuth>} />

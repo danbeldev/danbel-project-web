@@ -277,10 +277,10 @@ export const Header = ({ mode, toggleTheme }) => {
                                 <Button
                                     color="inherit"
                                     component={Link}
-                                    to="/admin/max"
+                                    to="/admin/messengers"
                                     sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                    Чаты групп
+                                    Мессенджеры
                                 </Button>
                             )}
                         </Box>
@@ -378,10 +378,10 @@ export const Header = ({ mode, toggleTheme }) => {
                                 {ApiService.isAdmin() && (
                                     <MenuItem
                                         component={Link}
-                                        to="/admin/max"
+                                        to="/admin/messengers"
                                         onClick={handleMenuClose(setMobileMenuAnchor)}
                                     >
-                                        Чаты групп
+                                        Мессенджеры
                                     </MenuItem>
                                 )}
                             </Menu>

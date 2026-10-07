@@ -1,8 +1,10 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
     Alert, Box, Button, Chip, CircularProgress, Container, FormControlLabel, MenuItem, Paper, Select, Stack, Switch,
-    ToggleButton, ToggleButtonGroup, Typography,
+    Tab, Tabs, ToggleButton, ToggleButtonGroup, Typography,
 } from '@mui/material';
+import {useSearchParams} from 'react-router-dom';
+import AdminTelegramStats from '../components/AdminTelegramStats';
 import {format} from 'date-fns';
 import {ru} from 'date-fns/locale';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -110,7 +112,7 @@ const GroupRow = ({group, status, onBind, onTest, onWelcome}) => {
 };
 
 // Админка чатов групп: у каждой группы свой мессенджер (Max или VK) и чат, в который бот пишет общие сообщения.
-const AdminMaxPage = () => {
+const GroupChatsTab = () => {
     const [status, setStatus] = useState(null);
     const [error, setError] = useState(null);
     const [info, setInfo] = useState(null);
@@ -195,8 +197,7 @@ const AdminMaxPage = () => {
     if (!status && !error) return <Box sx={{textAlign: 'center', py: 8}}><CircularProgress/></Box>;
 
     return (
-        <Container maxWidth="md" sx={{py: 3}}>
-            <Typography variant="h5" sx={{mb: 0.5}}>Чаты групп</Typography>
+        <Box>
             <Typography color="text.secondary" sx={{mb: 2}}>
                 Общие сообщения группе (новая лекция, сроки сдачи, итоги) бот отправляет в её чат: у каждой группы это чат в Max или в VK.
             </Typography>
@@ -249,8 +250,25 @@ const AdminMaxPage = () => {
                 {loadingMessages && <CircularProgress size={28}/>}
                 {!loadingMessages && hasMore && <Button onClick={() => loadMessages(page + 1, false)}>Показать ещё</Button>}
             </Box>
+        </Box>
+    );
+};
+
+// Мессенджеры: статистика подключения Telegram и чаты групп (Max и VK).
+const AdminMessengersPage = () => {
+    const [params, setParams] = useSearchParams();
+    const tab = params.get('tab') === 'groups' ? 'groups' : 'telegram';
+
+    return (
+        <Container maxWidth="md" sx={{py: 3}}>
+            <Typography variant="h5" sx={{mb: 1}}>Мессенджеры</Typography>
+            <Tabs value={tab} onChange={(e, v) => setParams(v === 'telegram' ? {} : {tab: v}, {replace: true})} sx={{mb: 2}}>
+                <Tab value="telegram" label="Telegram"/>
+                <Tab value="groups" label="Чаты групп (Max и VK)"/>
+            </Tabs>
+            {tab === 'telegram' ? <AdminTelegramStats/> : <GroupChatsTab/>}
         </Container>
     );
 };
 
-export default AdminMaxPage;
+export default AdminMessengersPage;

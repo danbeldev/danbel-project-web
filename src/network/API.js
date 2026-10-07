@@ -512,6 +512,16 @@ const ApiService = {
         }
     },
 
+    // Сколько студентов подключили Telegram: итоги, по группам и по студентам (только админ).
+    getTelegramStats: async () => {
+        try {
+            const response = await api.get('/admin/telegram/stats');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     // Max: бот, известные чаты и группы с привязками (только админ).
     getMaxStatus: async () => {
         try {
