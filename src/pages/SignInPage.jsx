@@ -11,10 +11,13 @@ import {
     Stack
 } from '@mui/material';
 import ApiService from '../network/API';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const SignInPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    // Если на вход отправили со страницы, требующей авторизации, после входа возвращаем туда.
+    const returnTo = typeof location.state?.from === 'string' && location.state.from.startsWith('/') ? location.state.from : '/articles';
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -26,7 +29,7 @@ const SignInPage = () => {
         setLoading(true);
         try {
             await ApiService.signIn(username, password);
-            navigate('/articles');
+            navigate(returnTo, { replace: true });
             window.location.reload();
         } catch (err) {
             setError(typeof err === 'string' ? err : 'Ошибка входа');

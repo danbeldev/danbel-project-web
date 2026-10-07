@@ -20,6 +20,7 @@ import {AdminGitTasksPage} from "./pages/AdminGitTasksPage";
 import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
 import AdminCriteriaGradingPage from "./pages/AdminCriteriaGradingPage";
 import CriteriaPage from "./pages/CriteriaPage";
+import RequireAuth from "./components/RequireAuth";
 import {PrivacyPage} from "./pages/PrivacyPage";
 import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
 import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
@@ -190,7 +191,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/articles" element={<ArticlesPage />} />
                     <Route path="/articles/:id" element={<ArticlesDetailsPage mode={mode}/>} />
                     <Route path="/problems/:problemId" element={<ProblemCodeDetailsPage mode={mode}/>} />
-                    <Route path="/problems/:problemId/criteria" element={<CriteriaPage />} />
+                    <Route path="/problems/:problemId/criteria" element={<RequireAuth><CriteriaPage /></RequireAuth>} />
                     <Route path="/articles/new" element={<CreateArticlePage />} />
                     <Route path="/articles/edit/:id" element={<CreateArticlePage />} />
                     <Route path="/tags/:id" element={<TagDetailsPage />} />
@@ -199,15 +200,15 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/groups" element={<GroupsPage />} />
                     <Route path="/groups/:id" element={<GroupDetailsPage />} />
-                    <Route path="/admin/labs" element={<AdminLabsPage />} />
-                    <Route path="/admin/git-tasks" element={<AdminGitTasksPage />} />
-                    <Route path="/admin/mysql-tasks" element={<AdminMysqlTasksPage />} />
-                    <Route path="/admin/llm" element={<Suspense fallback={null}><AdminLlmPage /></Suspense>} />
-                    <Route path="/admin/problems/:problemId/grading" element={<AdminCriteriaGradingPage />} />
+                    <Route path="/admin/labs" element={<RequireAuth><AdminLabsPage /></RequireAuth>} />
+                    <Route path="/admin/git-tasks" element={<RequireAuth><AdminGitTasksPage /></RequireAuth>} />
+                    <Route path="/admin/mysql-tasks" element={<RequireAuth><AdminMysqlTasksPage /></RequireAuth>} />
+                    <Route path="/admin/llm" element={<RequireAuth><Suspense fallback={null}><AdminLlmPage /></Suspense></RequireAuth>} />
+                    <Route path="/admin/problems/:problemId/grading" element={<RequireAuth><AdminCriteriaGradingPage /></RequireAuth>} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                    <Route path="/admin/courseworks" element={<AdminCourseworksPage />} />
-                    <Route path="/admin/courseworks/:id" element={<CourseworkDetailsPage />} />
+                    <Route path="/admin/courseworks" element={<RequireAuth><AdminCourseworksPage /></RequireAuth>} />
+                    <Route path="/admin/courseworks/:id" element={<RequireAuth><CourseworkDetailsPage /></RequireAuth>} />
                     <Route path="*" element={<Navigate to="/articles" />} />
                 </Routes>
             </Box>
