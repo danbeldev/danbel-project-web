@@ -13,6 +13,9 @@ import ApiService from '../network/API';
 
 const PROVIDERS = {MAX: 'Max', VK: 'VK'};
 
+// Название чата; у бесед VK оно не всегда известно боту — тогда показываем номер беседы (peer_id = 2000000000 + номер).
+const chatLabel = (c) => c.title || (c.provider === 'VK' ? `Беседа VK №${c.chatId - 2000000000}` : `Чат ${c.chatId}`);
+
 const errText = (e, fallback) => (typeof e === 'string' ? e : (e?.message || fallback));
 const formatTime = (iso) => format(new Date(iso), 'd MMMM, HH:mm', {locale: ru});
 
@@ -78,7 +81,7 @@ const GroupRow = ({group, status, onBind, onTest, onWelcome}) => {
                         <MenuItem value=""><em>{chats.length ? 'Выберите чат' : 'Нет чатов'}</em></MenuItem>
                         {chats.map((c) => (
                             <MenuItem key={c.chatId} value={String(c.chatId)}>
-                                {c.title || `Чат ${c.chatId}`}{c.groupId != null && c.groupId !== group.id ? ` — занят (${c.groupName})` : ''}
+                                {chatLabel(c)}{c.groupId != null && c.groupId !== group.id ? ` — занят (${c.groupName})` : ''}
                             </MenuItem>
                         ))}
                     </Select>
