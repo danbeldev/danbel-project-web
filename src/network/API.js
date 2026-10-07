@@ -548,6 +548,15 @@ const ApiService = {
         }
     },
 
+    // Итоговый отчёт по оценкам лекции: Max-чат группы + Telegram студентам (только админ).
+    sendGradesReport: async (articleId, groupId) => {
+        try {
+            await api.post(`/admin/articles/${articleId}/groups/${groupId}/grades-report/send`);
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getLlmUsage: async (days = 30) => {
         try {
             const response = await api.get('/admin/llm/usage', {params: {days}});
