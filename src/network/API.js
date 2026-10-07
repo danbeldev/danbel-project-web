@@ -522,9 +522,10 @@ const ApiService = {
         }
     },
 
-    bindMaxChat: async (chatId, groupId) => {
+    // Привязать чат мессенджера (MAX или VK) к группе; groupId = null — отвязать.
+    bindGroupChat: async (provider, chatId, groupId) => {
         try {
-            await api.put(`/admin/max/chats/${chatId}/group`, {groupId});
+            await api.put(`/admin/chats/${provider}/${chatId}/group`, {groupId});
         } catch (error) {
             throw error.response?.data || error.message;
         }

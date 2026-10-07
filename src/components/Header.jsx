@@ -280,7 +280,7 @@ export const Header = ({ mode, toggleTheme }) => {
                                     to="/admin/max"
                                     sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                                 >
-                                    Чаты Max
+                                    Чаты групп
                                 </Button>
                             )}
                         </Box>
@@ -381,7 +381,7 @@ export const Header = ({ mode, toggleTheme }) => {
                                         to="/admin/max"
                                         onClick={handleMenuClose(setMobileMenuAnchor)}
                                     >
-                                        Чаты Max
+                                        Чаты групп
                                     </MenuItem>
                                 )}
                             </Menu>

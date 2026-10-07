@@ -210,6 +210,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/admin/problems/:problemId/grading" element={<RequireAuth><AdminCriteriaGradingPage /></RequireAuth>} />
                     <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
                     <Route path="/admin/max" element={<RequireAuth><AdminMaxPage /></RequireAuth>} />
+                    <Route path="/admin/chats" element={<RequireAuth><AdminMaxPage /></RequireAuth>} />
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/admin/courseworks" element={<RequireAuth><AdminCourseworksPage /></RequireAuth>} />
