@@ -21,6 +21,7 @@ import {AdminMysqlTasksPage} from "./pages/AdminMysqlTasksPage";
 import AdminCriteriaGradingPage from "./pages/AdminCriteriaGradingPage";
 import CriteriaPage from "./pages/CriteriaPage";
 import RequireAuth from "./components/RequireAuth";
+import {TelegramConnectDialog} from "./components/TelegramConnect";
 import {PrivacyPage} from "./pages/PrivacyPage";
 import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
 import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
@@ -214,6 +215,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
             </Box>
 
             {!hideFooter && <Footer />}
+            <TelegramConnectDialog/>
             <FloorAdBlock/>
             <InImageAdInjector/>
         </Box>

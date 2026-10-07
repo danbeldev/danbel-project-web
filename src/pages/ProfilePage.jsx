@@ -21,6 +21,7 @@ import EvaluationList from '../components/EvaluationList';
 import YandexAdBlock from '../components/ads/YandexAdBlock';
 import ProblemLimitsCard from '../components/ProblemLimitsCard';
 import CourseworkCard from '../components/CourseworkCard';
+import {TelegramConnectCard} from '../components/TelegramConnect';
 import { copyToClipboard } from '../copyToClipboard';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -154,6 +155,8 @@ export const ProfilePage = () => {
             </Box>
 
             <div style={{height: "10px"}}/>
+
+            <TelegramConnectCard/>
 
             {/* Данные для входа в Gitea — нужны для git-задач */}
             <Box sx={{ maxWidth: 320, mx: 'auto', mb: 3 }}>
