@@ -503,9 +503,9 @@ const ApiService = {
         }
     },
 
-    getCriteriaAiEstimate: async (problemId, groupId) => {
+    getCriteriaAiEstimate: async (problemId, groupId, recheck = false) => {
         try {
-            const response = await api.get(`/problems/${problemId}/criteria/ai/estimate`, {params: groupId ? {groupId} : {}});
+            const response = await api.get(`/problems/${problemId}/criteria/ai/estimate`, {params: {...(groupId ? {groupId} : {}), ...(recheck ? {recheck: true} : {})}});
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -521,9 +521,9 @@ const ApiService = {
         }
     },
 
-    runCriteriaAi: async (problemId, force = false, groupId = null) => {
+    runCriteriaAi: async (problemId, force = false, groupId = null, recheck = false) => {
         try {
-            const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: groupId ? {force, groupId} : {force}});
+            const response = await api.post(`/problems/${problemId}/criteria/ai/run`, null, {params: {force, ...(groupId ? {groupId} : {}), ...(recheck ? {recheck: true} : {})}});
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

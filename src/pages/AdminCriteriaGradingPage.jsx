@@ -68,6 +68,7 @@ const AdminCriteriaGradingPage = () => {
         // Точечный запуск — и проверка, и перепроверка. Баллы, выставленные вручную, перезаписываем только с согласия.
         const hasManual = Object.values(student.results || {}).some((r) => r.source === 'TEACHER');
         if (hasManual && !window.confirm('У студента есть баллы, которые вы выставили вручную. Перепроверить AI и перезаписать их?')) return;
+        if (student.autoPublished && !window.confirm('Результат студента опубликован автоматически. Перепроверить AI и заменить его? Студент сразу увидит новые баллы.')) return;
         setAiBusyId(student.userId);
         try {
             const outcome = await ApiService.runCriteriaAiForUser(problemId, student.userId, true, hasManual);
@@ -180,7 +181,7 @@ const AdminCriteriaGradingPage = () => {
                             {data.problemType === 'MYSQL_DB' && (
                                 <Button size="small" color="secondary" variant="outlined"
                                         startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
-                                        disabled={!aiStatus?.config?.enabled || aiBusyId === s.userId || s.published}
+                                        disabled={!aiStatus?.config?.enabled || aiBusyId === s.userId || (s.published && !s.autoPublished)}
                                         onClick={(e) => { e.stopPropagation(); runAiForStudent(s); }}
                                         onFocus={(e) => e.stopPropagation()}>
                                     AI
@@ -240,7 +241,7 @@ const AdminCriteriaGradingPage = () => {
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
                                 {data.problemType === 'MYSQL_DB' && (
                                 <Button color="secondary" startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
-                                        disabled={data.problemType !== 'MYSQL_DB' || !aiStatus?.config?.enabled || aiBusyId === s.userId || s.published}
+                                        disabled={data.problemType !== 'MYSQL_DB' || !aiStatus?.config?.enabled || aiBusyId === s.userId || (s.published && !s.autoPublished)}
                                         onClick={() => runAiForStudent(s)}>
                                     Проверить AI
                                 </Button>

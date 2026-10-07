@@ -4,6 +4,7 @@ import {
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CalculateIcon from '@mui/icons-material/Calculate';
+import ReplayIcon from '@mui/icons-material/Replay';
 import ApiService from '../network/API';
 
 const fmtTokens = (n) => (n >= 1000 ? `${Math.round(n / 100) / 10} тыс.` : String(n));
@@ -43,6 +44,30 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
         const timer = setInterval(refresh, 3000);
         return () => clearInterval(timer);
     }, [running, refresh, onFinished]);
+
+    // Перепроверка: заново прогоняет все работы (в т.ч. уже проверенные и опубликованные автоматически).
+    // Опубликованное вами вручную и ваши ручные баллы не меняются.
+    const recheck = async () => {
+        setStarting(true);
+        setError(null);
+        try {
+            const est = await ApiService.getCriteriaAiEstimate(problemId, groupId, true);
+            setEstimate(est);
+            const scope = groupName ? `группы «${groupName}»` : 'всех групп';
+            const text = `Перепроверить работы ${scope}: ${est.checkable} через AI (≈ ${fmtTokens(est.totalEstimatedInputTokens)} токенов), ${est.empty} без таблиц получат 0 баллов. `
+                + (status?.autoPublish
+                    ? 'Результаты, опубликованные автоматически, будут ЗАМЕНЕНЫ — студенты сразу увидят новые баллы. '
+                    : 'Новые баллы появятся черновиками. ')
+                + 'Опубликованное вами вручную и ваши ручные баллы не изменятся.';
+            if (!window.confirm(text)) return;
+            await ApiService.runCriteriaAi(problemId, true, groupId, true);
+            await refresh();
+        } catch (err) {
+            setError(err.message || err.reason || 'Не удалось запустить перепроверку');
+        } finally {
+            setStarting(false);
+        }
+    };
 
     const toggleAutoPublish = async (enabled) => {
         if (enabled && !window.confirm('Включить автопубликацию? После AI-проверки студенты сразу увидят баллы и комментарии, а оценка лекции пересчитается. Баллы, которые вы выставили вручную, и уже опубликованные проверки AI не трогает.')) return;
@@ -103,8 +128,8 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
                         )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
-                        «Проверить всех» берёт только ещё не проверенные работы; кнопка «AI» у студента проверяет и
-                        перепроверяет конкретную работу. Работа без таблиц получает 0 баллов без обращения к AI и
+                        «Проверить всех» берёт только ещё не проверенные работы; «Перепроверить» заново прогоняет все
+                        (опубликованное вручную не меняется); кнопка «AI» у студента проверяет и перепроверяет одну работу. Работа без таблиц получает 0 баллов без обращения к AI и
                         публикуется сразу. Ваши ручные баллы AI не перезаписывает без подтверждения. Пока только MySQL.
                     </Typography>
                 </Box>
@@ -116,6 +141,10 @@ const CriteriaAiPanel = ({problemId, status, onStatusChange, onFinished, groupId
                     <Button variant="contained" color="secondary" onClick={start}
                             disabled={!config?.enabled || running || starting}>
                         {groupName ? `Проверить группу ${groupName}` : 'Проверить всех'}
+                    </Button>
+                    <Button variant="outlined" color="warning" startIcon={<ReplayIcon/>} onClick={recheck}
+                            disabled={!config?.enabled || running || starting}>
+                        Перепроверить
                     </Button>
                 </Stack>
             </Stack>
