@@ -13,6 +13,7 @@ import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -23,6 +24,7 @@ import ApiService from '../network/API';
 
 const KINDS = {
     CRITERIA_PUBLISHED: {icon: <FactCheckOutlinedIcon/>, color: '#2e7d32', label: 'Проверка'},
+    GRADES_REPORT: {icon: <AssessmentOutlinedIcon/>, color: '#00897b', label: 'Итоги лекции'},
     GRADE_CHANGED: {icon: <GradeOutlinedIcon/>, color: '#ed6c02', label: 'Оценка'},
     DEADLINE_REMINDER: {icon: <AlarmOutlinedIcon/>, color: '#d32f2f', label: 'Напоминание'},
     DEADLINE_PASSED: {icon: <LockOutlinedIcon/>, color: '#6d4c41', label: 'Срок истёк'},
