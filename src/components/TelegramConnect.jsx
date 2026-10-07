@@ -181,7 +181,7 @@ export const TelegramConnectDialog = () => {
                     {done ? 'Telegram подключён' : 'Подключите Telegram'}
                 </Typography>
                 <Typography sx={{mt: 0.5, opacity: 0.9}}>
-                    {done ? 'Теперь уведомления будут приходить вам в личные сообщения' : 'Личные уведомления DanBel прямо в мессенджере'}
+                    {done ? 'Теперь уведомления будут приходить вам в личные сообщения' : 'Уведомления прямо в мессенджере'}
                 </Typography>
             </Box>
 
