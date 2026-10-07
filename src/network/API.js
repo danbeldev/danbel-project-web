@@ -512,6 +512,42 @@ const ApiService = {
         }
     },
 
+    // Max: бот, известные чаты и группы с привязками (только админ).
+    getMaxStatus: async () => {
+        try {
+            const response = await api.get('/admin/max');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    bindMaxChat: async (chatId, groupId) => {
+        try {
+            await api.put(`/admin/max/chats/${chatId}/group`, {groupId});
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    sendMaxTest: async (groupId) => {
+        try {
+            const response = await api.post(`/admin/max/groups/${groupId}/test`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getGroupMessages: async ({page = 0, size = 30, onlyFailed = false} = {}) => {
+        try {
+            const response = await api.get('/admin/group-messages', {params: {page, size, onlyFailed}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getLlmUsage: async (days = 30) => {
         try {
             const response = await api.get('/admin/llm/usage', {params: {days}});

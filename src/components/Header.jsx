@@ -273,6 +273,16 @@ export const Header = ({ mode, toggleTheme }) => {
                                     AI-расход
                                 </Button>
                             )}
+                            {ApiService.isAdmin() && (
+                                <Button
+                                    color="inherit"
+                                    component={Link}
+                                    to="/admin/max"
+                                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                                >
+                                    Чаты Max
+                                </Button>
+                            )}
                         </Box>
                     ) : (
                         // Мобильная навигация (справа)
@@ -363,6 +373,15 @@ export const Header = ({ mode, toggleTheme }) => {
                                         onClick={handleMenuClose(setMobileMenuAnchor)}
                                     >
                                         AI-расход
+                                    </MenuItem>
+                                )}
+                                {ApiService.isAdmin() && (
+                                    <MenuItem
+                                        component={Link}
+                                        to="/admin/max"
+                                        onClick={handleMenuClose(setMobileMenuAnchor)}
+                                    >
+                                        Чаты Max
                                     </MenuItem>
                                 )}
                             </Menu>
