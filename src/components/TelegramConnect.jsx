@@ -8,11 +8,15 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
+    IconButton,
     Typography,
 } from '@mui/material';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import GradeOutlinedIcon from '@mui/icons-material/GradeOutlined';
+import AlarmOutlinedIcon from '@mui/icons-material/AlarmOutlined';
+import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
 import ApiService from '../network/API';
 
 const POLL_MS = 3000;
@@ -79,6 +83,9 @@ const useTelegramLink = () => {
 const connected = (s) => !!(s && s.linked && s.enabled);
 const available = (s) => !!(s && s.botEnabled && s.botUsername);
 
+const TG_BLUE = '#229ED9';
+const TG_BLUE_LIGHT = '#2AABEE';
+
 const WaitingHint = ({linkUrl}) => (
     <Box sx={{display: 'flex', alignItems: 'center', gap: 1.5, mt: 2}}>
         <CircularProgress size={18}/>
@@ -86,6 +93,41 @@ const WaitingHint = ({linkUrl}) => (
             Откройте Telegram и нажмите Start. Если вкладка не открылась,{' '}
             <a href={linkUrl} target="_blank" rel="noopener noreferrer">перейдите по ссылке</a>.
         </Typography>
+    </Box>
+);
+
+const BENEFITS = [
+    {icon: <GradeOutlinedIcon/>, title: 'Баллы и оценки', text: 'Узнаете о проверке сразу, как только она опубликована'},
+    {icon: <AlarmOutlinedIcon/>, title: 'Напоминания о сроках', text: 'За сутки и за 2 часа до сдачи, если работа ещё не принята'},
+    {icon: <NotificationsActiveOutlinedIcon/>, title: 'Важные изменения', text: 'Новые лекции, смена срока, приглашение в пару'},
+];
+
+const Benefit = ({icon, title, text}) => (
+    <Box sx={{display: 'flex', gap: 1.75, alignItems: 'flex-start'}}>
+        <Box sx={{
+            width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: TG_BLUE_LIGHT, bgcolor: 'rgba(34, 158, 217, 0.14)',
+        }}>
+            {icon}
+        </Box>
+        <Box>
+            <Typography sx={{fontWeight: 600, lineHeight: 1.3}}>{title}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{lineHeight: 1.45}}>{text}</Typography>
+        </Box>
+    </Box>
+);
+
+const Step = ({n, active, done, children}) => (
+    <Box sx={{display: 'flex', alignItems: 'center', gap: 1.5, opacity: active || done ? 1 : 0.55}}>
+        <Box sx={{
+            width: 26, height: 26, borderRadius: '50%', flexShrink: 0, fontSize: 13, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', bgcolor: done ? 'success.main' : TG_BLUE,
+        }}>
+            {done ? <CheckCircleIcon sx={{fontSize: 18}}/> : n}
+        </Box>
+        <Typography variant="body2">{children}</Typography>
     </Box>
 );
 
@@ -110,36 +152,84 @@ export const TelegramConnectDialog = () => {
     }, [location.pathname, refresh]);
 
     const done = connected(status);
+    const close = () => setOpen(false);
 
     return (
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
-            <DialogTitle sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                {done ? <CheckCircleIcon color="success"/> : <TelegramIcon color="primary"/>}
-                {done ? 'Telegram подключён' : 'Подключите Telegram'}
-            </DialogTitle>
-            <DialogContent>
+        <Dialog
+            open={open}
+            onClose={close}
+            maxWidth="xs"
+            fullWidth
+            slotProps={{paper: {sx: {borderRadius: '24px', overflow: 'hidden', m: 2, backgroundImage: 'none'}}}}
+        >
+            <Box sx={{
+                position: 'relative', px: 3, pt: 4, pb: 3, textAlign: 'center', color: '#fff',
+                background: `linear-gradient(135deg, ${TG_BLUE_LIGHT} 0%, ${TG_BLUE} 55%, #1c7fc0 100%)`,
+            }}>
+                <IconButton onClick={close} aria-label="Закрыть" size="small"
+                            sx={{position: 'absolute', top: 10, right: 10, color: 'rgba(255,255,255,0.85)'}}>
+                    <CloseIcon fontSize="small"/>
+                </IconButton>
+                <Box sx={{
+                    width: 72, height: 72, mx: 'auto', mb: 2, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    bgcolor: 'rgba(255,255,255,0.2)', boxShadow: '0 0 0 8px rgba(255,255,255,0.12)',
+                }}>
+                    {done ? <CheckCircleIcon sx={{fontSize: 44}}/> : <TelegramIcon sx={{fontSize: 44}}/>}
+                </Box>
+                <Typography variant="h5" sx={{fontWeight: 700}}>
+                    {done ? 'Telegram подключён' : 'Подключите Telegram'}
+                </Typography>
+                <Typography sx={{mt: 0.5, opacity: 0.9}}>
+                    {done ? 'Теперь уведомления будут приходить вам в личные сообщения' : 'Личные уведомления DanBel прямо в мессенджере'}
+                </Typography>
+            </Box>
+
+            <DialogContent sx={{px: 3, pt: 3, pb: 1}}>
                 {done ? (
-                    <Typography>Готово! Теперь уведомления будут приходить вам в Telegram.</Typography>
+                    <Typography color="text.secondary" sx={{textAlign: 'center', py: 1}}>
+                        Отключить уведомления можно в профиле или командой /stop в боте.
+                    </Typography>
+                ) : waiting ? (
+                    <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.75, py: 0.5}}>
+                        <Step n={1} done>Бот открыт в новой вкладке</Step>
+                        <Step n={2} active>Нажмите <b>Start</b> в Telegram</Step>
+                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1.5, mt: 0.5}}>
+                            <CircularProgress size={18} sx={{color: TG_BLUE}}/>
+                            <Typography variant="body2" color="text.secondary">
+                                Ждём подтверждения. Вкладка не открылась?{' '}
+                                <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{color: TG_BLUE_LIGHT}}>Открыть бота</a>
+                            </Typography>
+                        </Box>
+                    </Box>
                 ) : (
-                    <>
-                        <Typography>
-                            Бот DanBel будет присылать вам личные уведомления: о баллах, сроках сдачи и другом важном.
-                            Подключение занимает несколько секунд.
-                        </Typography>
-                        {waiting && <WaitingHint linkUrl={linkUrl}/>}
-                        {error && <Alert severity="error" sx={{mt: 2}}>{error}</Alert>}
-                    </>
+                    <Box sx={{display: 'flex', flexDirection: 'column', gap: 2.25}}>
+                        {BENEFITS.map((b) => <Benefit key={b.title} {...b}/>)}
+                    </Box>
                 )}
+                {error && <Alert severity="error" sx={{mt: 2}}>{error}</Alert>}
             </DialogContent>
-            <DialogActions>
+
+            <DialogActions sx={{flexDirection: 'column', gap: 0.5, px: 3, pt: 2, pb: 2.5, '& > :not(style) ~ :not(style)': {ml: 0}}}>
                 {done ? (
-                    <Button variant="contained" onClick={() => setOpen(false)}>Закрыть</Button>
+                    <Button fullWidth size="large" variant="contained" onClick={close}
+                            sx={{bgcolor: TG_BLUE, '&:hover': {bgcolor: '#1c8bbf'}}}>
+                        Отлично
+                    </Button>
                 ) : (
                     <>
-                        <Button onClick={() => setOpen(false)}>Позже</Button>
-                        <Button variant="contained" startIcon={<TelegramIcon/>} onClick={connect}>
-                            {waiting ? 'Открыть ещё раз' : 'Подключить Telegram'}
+                        <Button fullWidth size="large" variant="contained" startIcon={<TelegramIcon/>} onClick={connect}
+                                sx={{bgcolor: TG_BLUE, borderRadius: '14px', py: 1.4, '&:hover': {bgcolor: '#1c8bbf'}}}>
+                            {waiting ? 'Открыть бота ещё раз' : 'Подключить Telegram'}
                         </Button>
+                        <Button fullWidth color="inherit" onClick={close} sx={{opacity: 0.7}}>
+                            Напомнить позже
+                        </Button>
+                        {!waiting && (
+                            <Typography variant="caption" color="text.secondary" sx={{textAlign: 'center', pt: 0.5}}>
+                                Бот пишет только вам и ничего не публикует. Подключение займёт несколько секунд.
+                            </Typography>
+                        )}
                     </>
                 )}
             </DialogActions>
