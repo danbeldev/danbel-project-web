@@ -222,9 +222,6 @@ export const TelegramConnectDialog = () => {
                                 sx={{bgcolor: TG_BLUE, borderRadius: '14px', py: 1.4, '&:hover': {bgcolor: '#1c8bbf'}}}>
                             {waiting ? 'Открыть бота ещё раз' : 'Подключить Telegram'}
                         </Button>
-                        <Button fullWidth color="inherit" onClick={close} sx={{opacity: 0.7}}>
-                            Напомнить позже
-                        </Button>
                         {!waiting && (
                             <Typography variant="caption" color="text.secondary" sx={{textAlign: 'center', pt: 0.5}}>
                                 Бот пишет только вам и ничего не публикует. Подключение займёт несколько секунд.
