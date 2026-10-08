@@ -114,7 +114,7 @@ export const GroupDetailsPage = () => {
     const navigate = useNavigate();
     const [group, setGroup] = useState(null);
     const [error, setError] = useState(null);
-    const [viewMode, setViewMode] = useState('cards');
+    const [viewMode, setViewMode] = useState('table');
     const [articlesByTag, setArticlesByTag] = useState({});
     const [editCell, setEditCell] = useState(null); // { anchorEl, userId, username, articleId, articleTitle }
     const [saving, setSaving] = useState(false);
@@ -288,7 +288,9 @@ export const GroupDetailsPage = () => {
             if (articlesByTag[tagId]) return;
             ApiService.getAllArticles([tagId], [], 0, 100)
                 .then((articles) => {
-                    setArticlesByTag((prev) => ({ ...prev, [tagId]: articles }));
+                    // Лекции слева направо в порядке появления (с сервера приходят от новых к старым).
+                    const ordered = [...articles].sort((a, b) => a.id - b.id);
+                    setArticlesByTag((prev) => ({ ...prev, [tagId]: ordered }));
                 })
                 .catch(() => {
                     setArticlesByTag((prev) => ({ ...prev, [tagId]: [] }));
@@ -470,6 +472,11 @@ export const GroupDetailsPage = () => {
                                                     </Typography>
                                                 )}
                                             </Stack>
+                                            {subject.evaluations.length === 0 && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Оценок пока нет. Поставить оценку можно в режиме «Таблица».
+                                                </Typography>
+                                            )}
                                             <Stack spacing={0.5}>
                                                 {subject.evaluations.map((e) => (
                                                     <Stack key={e.article.id} direction="row" alignItems="center" spacing={1.5}>
