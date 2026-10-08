@@ -4,7 +4,7 @@ import SendIcon from '@mui/icons-material/Send';
 import ApiService from '../network/API';
 
 // Ручная отправка итогов по оценкам лекции группе (Max-чат + Telegram студентам). Список групп отдаётся только
-// админу, у остальных запрос падает и кнопка не показывается. Группы без срока сдачи в меню неактивны.
+// админу, у остальных запрос падает и кнопка не показывается.
 const AdminGradesReportSend = ({articleId}) => {
     const [groups, setGroups] = useState([]);
     const [anchor, setAnchor] = useState(null);
@@ -44,7 +44,7 @@ const AdminGradesReportSend = ({articleId}) => {
             </Button>
             <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
                 {groups.map((g) => (
-                    <MenuItem key={g.groupId} disabled={!g.closesAt} onClick={() => send(g)}>
+                    <MenuItem key={g.groupId} onClick={() => send(g)}>
                         {g.groupName}{g.closesAt ? '' : ' (нет срока)'}
                     </MenuItem>
                 ))}
