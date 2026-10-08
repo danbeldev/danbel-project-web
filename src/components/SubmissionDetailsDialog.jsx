@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Editor } from '@monaco-editor/react';
+import YandexAdBlock from './ads/YandexAdBlock';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
@@ -160,6 +161,9 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
                     py: 2,
                 }}
             >
+                <Box sx={{mb: 2}}>
+                    <YandexAdBlock blockId="R-A-20141312-11" minHeight={90}/>
+                </Box>
                 {submissionDetail ? (
                     <Stack spacing={3}>
                         <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
