@@ -550,6 +550,15 @@ const ApiService = {
         }
     },
 
+    sendGroupMessage: async (groupId, text) => {
+        try {
+            const response = await api.post(`/admin/groups/${groupId}/message`, {text});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     sendMaxWelcome: async (groupId) => {
         try {
             const response = await api.post(`/admin/max/groups/${groupId}/welcome`);

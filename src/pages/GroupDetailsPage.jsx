@@ -42,6 +42,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DownloadIcon from '@mui/icons-material/Download';
+import SendIcon from '@mui/icons-material/Send';
 import KeyIcon from '@mui/icons-material/Key';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ApiService from '../network/API';
@@ -126,6 +127,10 @@ export const GroupDetailsPage = () => {
     const [addUsernamesText, setAddUsernamesText] = useState('');
     const [addResult, setAddResult] = useState(null); // [{userId, username, password}]
     const [addSubmitting, setAddSubmitting] = useState(false);
+
+    const [msgOpen, setMsgOpen] = useState(false);
+    const [msgText, setMsgText] = useState('');
+    const [msgSending, setMsgSending] = useState(false);
 
     const [resetDialog, setResetDialog] = useState(null); // {userId, username, password} | null
     const [resetSubmitting, setResetSubmitting] = useState(false);
@@ -306,6 +311,20 @@ export const GroupDetailsPage = () => {
         );
     }
 
+    const handleSendMessage = async () => {
+        setMsgSending(true);
+        try {
+            await ApiService.sendGroupMessage(id, msgText);
+            setMsgOpen(false);
+            setMsgText('');
+            setSuccessMessage(`Сообщение поставлено в отправку в чат группы ${group.name}`);
+        } catch (e) {
+            setActionError(typeof e === 'string' ? e : (e?.message || 'Не удалось отправить сообщение'));
+        } finally {
+            setMsgSending(false);
+        }
+    };
+
     if (!group) {
         return (
             <Box display="flex" justifyContent="center" py={10}>
@@ -367,7 +386,38 @@ export const GroupDetailsPage = () => {
                 >
                     Экспорт логинов (CSV)
                 </Button>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<SendIcon />}
+                    onClick={() => setMsgOpen(true)}
+                >
+                    Написать в чат группы
+                </Button>
             </Stack>
+
+            <Dialog open={msgOpen} onClose={() => !msgSending && setMsgOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Сообщение в чат группы {group.name}</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        multiline
+                        minRows={4}
+                        fullWidth
+                        margin="dense"
+                        label="Текст сообщения"
+                        value={msgText}
+                        onChange={(e) => setMsgText(e.target.value)}
+                        helperText="Уйдёт в беседу группы в Max или VK — туда, куда привязана группа"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setMsgOpen(false)} disabled={msgSending}>Отмена</Button>
+                    <Button variant="contained" onClick={handleSendMessage} disabled={msgSending || !msgText.trim()}>
+                        Отправить
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {group.students.length === 0 ? (
                 <Typography color="text.secondary">В этой группе пока нет студентов.</Typography>
