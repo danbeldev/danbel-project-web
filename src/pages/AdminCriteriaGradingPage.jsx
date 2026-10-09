@@ -10,6 +10,7 @@ import {Link, useParams} from 'react-router-dom';
 import ApiService from '../network/API';
 import CriteriaAiPanel from '../components/CriteriaAiPanel';
 
+const AI_TYPES = ['MYSQL_DB', 'GIT_REPO'];
 const fmt = (n) => String(Math.round(n * 100) / 100);
 const parse = (v) => parseFloat(String(v).replace(',', '.'));
 
@@ -146,7 +147,7 @@ const AdminCriteriaGradingPage = () => {
                 </Box>
             )}
 
-            {data.problemType === 'MYSQL_DB' && (
+            {AI_TYPES.includes(data.problemType) && (
                 <CriteriaAiPanel problemId={problemId} status={aiStatus} onStatusChange={setAiStatus} onFinished={load}
                                  groupId={selectedGroup ? selectedGroup.id : null} groupName={selectedGroup ? selectedGroup.name : null}/>
             )}
@@ -178,7 +179,7 @@ const AdminCriteriaGradingPage = () => {
                                       title={lastRun(s.userId).message || ''}
                                       label={{OK: 'AI проверил', SKIPPED: 'AI пропустил', ERROR: 'AI: ошибка'}[lastRun(s.userId).status] || lastRun(s.userId).status}/>
                             )}
-                            {data.problemType === 'MYSQL_DB' && (
+                            {AI_TYPES.includes(data.problemType) && (
                                 <Button size="small" color="secondary" variant="outlined"
                                         startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
                                         disabled={!aiStatus?.config?.enabled || aiBusyId === s.userId || (s.published && !s.autoPublished)}
@@ -239,9 +240,9 @@ const AdminCriteriaGradingPage = () => {
                                 );
                             })}
                             <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                {data.problemType === 'MYSQL_DB' && (
+                                {AI_TYPES.includes(data.problemType) && (
                                 <Button color="secondary" startIcon={aiBusyId === s.userId ? <CircularProgress size={14}/> : <AutoAwesomeIcon/>}
-                                        disabled={data.problemType !== 'MYSQL_DB' || !aiStatus?.config?.enabled || aiBusyId === s.userId || (s.published && !s.autoPublished)}
+                                        disabled={!AI_TYPES.includes(data.problemType) || !aiStatus?.config?.enabled || aiBusyId === s.userId || (s.published && !s.autoPublished)}
                                         onClick={() => runAiForStudent(s)}>
                                     Проверить AI
                                 </Button>
