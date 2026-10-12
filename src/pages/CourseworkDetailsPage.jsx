@@ -21,10 +21,14 @@ import {
     Alert,
     ToggleButton,
     ToggleButtonGroup,
+    Button,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import {useParams, Link} from 'react-router-dom';
 import ApiService from '../network/API';
 
@@ -41,6 +45,7 @@ export const CourseworkDetailsPage = () => {
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
     const [groupFilter, setGroupFilter] = useState('all');
+    const [reminding, setReminding] = useState(false);
 
     const load = () => {
         ApiService.getCourseworkById(id)
@@ -89,6 +94,32 @@ export const CourseworkDetailsPage = () => {
             setToast({severity: 'error', message: err.message || 'Не удалось изменить статус'});
         } finally {
             setSavingUserId(null);
+        }
+    };
+
+    const handleRemind = async () => {
+        setReminding(true);
+        try {
+            const r = await ApiService.remindCourseworkPlace(id);
+            const parts = [];
+            if (r.sent) parts.push(`отправлено в чаты групп: ${r.sent}`);
+            if (r.allFilled) parts.push(`все заполнили: ${r.allFilled}`);
+            if (r.noChat) parts.push(`нет чата у групп: ${r.noChat}`);
+            setToast({severity: r.sent ? 'success' : 'info', message: parts.join(', ') || 'Нечего отправлять'});
+        } catch (err) {
+            setToast({severity: 'error', message: err.message || 'Не удалось отправить'});
+        } finally {
+            setReminding(false);
+        }
+    };
+
+    const handleToggleDaily = async (enabled) => {
+        setCoursework((prev) => ({...prev, dailyReminder: enabled}));
+        try {
+            await ApiService.setCourseworkDailyReminder(id, enabled);
+        } catch (err) {
+            setCoursework((prev) => ({...prev, dailyReminder: !enabled}));
+            setToast({severity: 'error', message: err.message || 'Не удалось изменить настройку'});
         }
     };
 
@@ -144,6 +175,41 @@ export const CourseworkDetailsPage = () => {
                     Группы: {coursework.groups.map((g) => g.name).join(', ') || '—'}
                 </Typography>
             )}
+
+            <Paper variant="outlined" sx={{p: 2, mb: 3}}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{mb: 1}}>
+                    Место практики заполнили
+                </Typography>
+                <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2}}>
+                    {(coursework.progress || []).map((p) => (
+                        <Chip
+                            key={p.groupId}
+                            color={p.filled === p.total ? 'success' : 'warning'}
+                            variant="outlined"
+                            label={`${p.groupName}: ${p.filled} из ${p.total} (не заполнили ${p.total - p.filled})`}
+                        />
+                    ))}
+                </Box>
+                <Box sx={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2}}>
+                    <Button
+                        variant="contained"
+                        startIcon={<NotificationsActiveIcon/>}
+                        onClick={handleRemind}
+                        disabled={reminding}
+                    >
+                        Напомнить в чатах групп
+                    </Button>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={coursework.dailyReminder !== false}
+                                onChange={(e) => handleToggleDaily(e.target.checked)}
+                            />
+                        }
+                        label="Каждый день в 10:00, пока не заполнят"
+                    />
+                </Box>
+            </Paper>
 
             <TableContainer component={Paper} variant="outlined">
                 <Table size="small">

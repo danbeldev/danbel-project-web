@@ -321,6 +321,24 @@ const ApiService = {
         }
     },
 
+    remindCourseworkPlace: async (courseworkId) => {
+        try {
+            const response = await api.post(`/courseworks/${courseworkId}/remind`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    setCourseworkDailyReminder: async (courseworkId, enabled) => {
+        try {
+            const response = await api.put(`/courseworks/${courseworkId}/reminder`, {enabled});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     getGradingRules: async () => {
         try {
             const response = await api.get(`/problems/grading-rules`);

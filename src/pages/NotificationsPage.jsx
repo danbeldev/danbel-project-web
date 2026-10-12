@@ -29,6 +29,7 @@ const KINDS = {
     DEADLINE_REMINDER: {icon: <AlarmOutlinedIcon/>, color: '#d32f2f', label: 'Напоминание'},
     DEADLINE_PASSED: {icon: <LockOutlinedIcon/>, color: '#6d4c41', label: 'Срок истёк'},
     DEADLINE_CHANGED: {icon: <EventOutlinedIcon/>, color: '#0288d1', label: 'Срок сдачи'},
+    COURSEWORK_REMINDER: {icon: <AlarmOutlinedIcon/>, color: '#d32f2f', label: 'Практика'},
     PARTNER: {icon: <GroupOutlinedIcon/>, color: '#7b1fa2', label: 'Пара'},
     NEW_ARTICLE: {icon: <MenuBookOutlinedIcon/>, color: '#4361ee', label: 'Лекция'},
     OTHER: {icon: <NotificationsNoneIcon/>, color: '#607d8b', label: 'Уведомление'},
