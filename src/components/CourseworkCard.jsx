@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
-import {Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, TextField, Typography} from '@mui/material';
+import {Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Collapse, Stack, TextField, Typography} from '@mui/material';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ApiService from '../network/API';
 
 const FIELDS = [
@@ -31,6 +32,7 @@ const CourseworkCard = ({submission, onSaved}) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [open, setOpen] = useState(false);
 
     const isEmpty = (key) => !values[key].trim();
     const filled = FIELDS.every((f) => !isEmpty(f.key));
@@ -59,6 +61,7 @@ const CourseworkCard = ({submission, onSaved}) => {
                 description: values.description.trim(),
             });
             setSuccess(true);
+            setOpen(false);
             onSaved && onSaved();
         } catch (err) {
             setError((typeof err === 'string' ? err : err?.message) || 'Не удалось сохранить. Попробуйте ещё раз');
@@ -83,67 +86,85 @@ const CourseworkCard = ({submission, onSaved}) => {
                     )}
                 </Stack>
 
-                {submission.approved ? (
+                {!open && (
                     <Box>
-                        <Alert severity="success" sx={{mb: 2}}>Тема утверждена преподавателем. Изменить данные нельзя.</Alert>
-                        {FIELDS.map((f) => (
-                            <Box key={f.key} sx={{mb: 1.5}}>
-                                <Typography variant="body2" color="text.secondary">{f.label}</Typography>
-                                <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{submission[f.key] || '—'}</Typography>
+                        {success && <Alert severity="success" sx={{mb: 1.5}}>Сохранено. Данные отправлены преподавателю.</Alert>}
+                        {!success && nothingYet && !submission.approved && (
+                            <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>
+                                Нужно указать место практики, тему и описание.
+                            </Typography>
+                        )}
+                        {!nothingYet && (
+                            <Box sx={{mb: 1.5}}>
+                                <Typography variant="body2" color="text.secondary">Место практики</Typography>
+                                <Typography variant="body1">{submission.placeOfPractice || '—'}</Typography>
+                                {submission.savedAt && (
+                                    <Typography variant="caption" color="text.secondary">
+                                        Последнее сохранение: {formatSaved(submission.savedAt)}
+                                    </Typography>
+                                )}
                             </Box>
-                        ))}
-                    </Box>
-                ) : (
-                    <Box>
-                        {nothingYet && !success && (
-                            <Alert severity="warning" sx={{mb: 1}}>
-                                Заполните место практики, тему и описание — все поля обязательны.
-                            </Alert>
                         )}
-                        {FIELDS.map((f) => {
-                            const invalid = touched && isEmpty(f.key);
-                            return (
-                                <TextField
-                                    key={f.key}
-                                    label={f.label}
-                                    required
-                                    fullWidth
-                                    multiline={f.multiline}
-                                    minRows={f.multiline ? 3 : undefined}
-                                    margin="dense"
-                                    value={values[f.key]}
-                                    onChange={change(f.key)}
-                                    error={invalid}
-                                    helperText={invalid ? 'Обязательное поле' : f.hint}
-                                    disabled={saving}
-                                />
-                            );
-                        })}
-
-                        {error && <Alert severity="error" sx={{mt: 1.5}}>{error}</Alert>}
-                        {success && (
-                            <Alert severity="success" sx={{mt: 1.5}}>
-                                Сохранено. Данные отправлены преподавателю.
-                            </Alert>
-                        )}
-
-                        <Stack direction="row" alignItems="center" spacing={2} sx={{mt: 2}}>
-                            <Button
-                                variant="contained"
-                                startIcon={saving ? <CircularProgress size={16} color="inherit"/> : <SaveOutlinedIcon/>}
-                                onClick={handleSave}
-                                disabled={saving}
-                            >
-                                {saving ? 'Сохраняем…' : 'Сохранить'}
-                            </Button>
-                            {submission.savedAt && (
-                                <Typography variant="caption" color="text.secondary">
-                                    Последнее сохранение: {formatSaved(submission.savedAt)}
-                                </Typography>
-                            )}
-                        </Stack>
+                        <Button
+                            variant={nothingYet ? 'contained' : 'outlined'}
+                            startIcon={<EditOutlinedIcon/>}
+                            onClick={() => { setOpen(true); setSuccess(false); }}
+                        >
+                            {submission.approved ? 'Показать данные' : nothingYet ? 'Заполнить' : 'Изменить'}
+                        </Button>
                     </Box>
                 )}
+
+                <Collapse in={open} unmountOnExit>
+                    {submission.approved ? (
+                        <Box>
+                            <Alert severity="success" sx={{mb: 2}}>Тема утверждена преподавателем. Изменить данные нельзя.</Alert>
+                            {FIELDS.map((f) => (
+                                <Box key={f.key} sx={{mb: 1.5}}>
+                                    <Typography variant="body2" color="text.secondary">{f.label}</Typography>
+                                    <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{submission[f.key] || '—'}</Typography>
+                                </Box>
+                            ))}
+                            <Button onClick={() => setOpen(false)}>Свернуть</Button>
+                        </Box>
+                    ) : (
+                        <Box>
+                            {FIELDS.map((f) => {
+                                const invalid = touched && isEmpty(f.key);
+                                return (
+                                    <TextField
+                                        key={f.key}
+                                        label={f.label}
+                                        required
+                                        fullWidth
+                                        multiline={f.multiline}
+                                        minRows={f.multiline ? 3 : undefined}
+                                        margin="dense"
+                                        value={values[f.key]}
+                                        onChange={change(f.key)}
+                                        error={invalid}
+                                        helperText={invalid ? 'Обязательное поле' : f.hint}
+                                        disabled={saving}
+                                    />
+                                );
+                            })}
+
+                            {error && <Alert severity="error" sx={{mt: 1.5}}>{error}</Alert>}
+
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{mt: 2}}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={saving ? <CircularProgress size={16} color="inherit"/> : <SaveOutlinedIcon/>}
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                >
+                                    {saving ? 'Сохраняем…' : 'Сохранить'}
+                                </Button>
+                                <Button onClick={() => setOpen(false)} disabled={saving}>Отмена</Button>
+                            </Stack>
+                        </Box>
+                    )}
+                </Collapse>
             </CardContent>
         </Card>
     );
