@@ -37,6 +37,16 @@ const formatFullName = (row) => {
     return parts.length > 0 ? parts.join(' ') : row.username;
 };
 
+const formatSaved = (iso) =>
+    new Date(iso).toLocaleString('ru-RU', {
+        timeZone: 'Europe/Samara',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
 export const CourseworkDetailsPage = () => {
     const {id} = useParams();
     const [coursework, setCoursework] = useState(null);
@@ -73,6 +83,7 @@ export const CourseworkDetailsPage = () => {
                 topic: row.topic,
                 description: row.description,
             });
+            load();
             setToast({severity: 'success', message: 'Сохранено'});
         } catch (err) {
             setToast({severity: 'error', message: err.message || 'Не удалось сохранить'});
@@ -220,6 +231,7 @@ export const CourseworkDetailsPage = () => {
                             <TableCell sx={{minWidth: 200}}>Место практики</TableCell>
                             <TableCell sx={{minWidth: 200}}>Тема</TableCell>
                             <TableCell sx={{minWidth: 220}}>Описание</TableCell>
+                            <TableCell sx={{whiteSpace: 'nowrap'}}>Сохранено</TableCell>
                             <TableCell align="center">Статус</TableCell>
                             <TableCell align="center">Действия</TableCell>
                         </TableRow>
@@ -259,6 +271,9 @@ export const CourseworkDetailsPage = () => {
                                             disabled={row.approved || busy}
                                             onChange={(e) => updateRow(row.userId, 'description', e.target.value)}
                                         />
+                                    </TableCell>
+                                    <TableCell sx={{whiteSpace: 'nowrap'}}>
+                                        {row.savedAt ? formatSaved(row.savedAt) : <Typography variant="body2" color="text.disabled">не заполнено</Typography>}
                                     </TableCell>
                                     <TableCell align="center">
                                         {row.approved ? (
