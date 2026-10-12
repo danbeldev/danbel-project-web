@@ -239,7 +239,7 @@ export const CourseworkDetailsPage = () => {
                             <TableCell sx={{minWidth: 200}}>Место практики</TableCell>
                             <TableCell sx={{minWidth: 200}}>Тема</TableCell>
                             <TableCell sx={{minWidth: 220}}>Описание</TableCell>
-                            <TableCell sx={{whiteSpace: 'nowrap'}}>Сохранено</TableCell>
+                            <TableCell sx={{whiteSpace: 'nowrap'}}>Сохранено студентом</TableCell>
                             <TableCell align="center">Статус</TableCell>
                             <TableCell align="center">Действия</TableCell>
                         </TableRow>
