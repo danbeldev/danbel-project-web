@@ -150,7 +150,15 @@ export const CourseworkDetailsPage = () => {
         );
     }
 
-    const visibleRows = groupFilter === 'all' ? rows : rows.filter((r) => r.groupName === groupFilter);
+    // Сначала недавно сохранившие; не заполнившие — в конце (по ФИО, как пришло с сервера).
+    const visibleRows = (groupFilter === 'all' ? rows : rows.filter((r) => r.groupName === groupFilter))
+        .slice()
+        .sort((a, b) => {
+            if (!a.savedAt && !b.savedAt) return 0;
+            if (!a.savedAt) return 1;
+            if (!b.savedAt) return -1;
+            return new Date(b.savedAt) - new Date(a.savedAt);
+        });
 
     return (
         <Container maxWidth="lg" sx={{py: 4}}>
