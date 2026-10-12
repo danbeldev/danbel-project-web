@@ -1,29 +1,67 @@
 import React, {useState} from 'react';
-import {Box, Card, CardContent, Typography, TextField, Button, Chip, CircularProgress, Stack} from '@mui/material';
+import {Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, TextField, Typography} from '@mui/material';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import ApiService from '../network/API';
 
-// Карточка курсовой в профиле студента. Пока тема не утверждена — поля редактируемые
+const FIELDS = [
+    {key: 'placeOfPractice', label: 'Место практики', hint: 'Где вы будете проходить практику', multiline: false},
+    {key: 'topic', label: 'Тема', hint: 'Тема прошлого года', multiline: false},
+    {key: 'description', label: 'Описание', hint: 'Чем занимается организация, в которой вы проходите практику', multiline: true},
+];
+
+const formatSaved = (iso) =>
+    new Date(iso).toLocaleString('ru-RU', {
+        timeZone: 'Europe/Samara',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+// Карточка курсовой в профиле студента. Пока тема не утверждена — поля редактируемые (все обязательные)
 // и есть кнопка "Сохранить". После утверждения admin'ом — только просмотр.
 const CourseworkCard = ({submission, onSaved}) => {
-    const [placeOfPractice, setPlaceOfPractice] = useState(submission.placeOfPractice || '');
-    const [topic, setTopic] = useState(submission.topic || '');
-    const [description, setDescription] = useState(submission.description || '');
+    const [values, setValues] = useState({
+        placeOfPractice: submission.placeOfPractice || '',
+        topic: submission.topic || '',
+        description: submission.description || '',
+    });
+    const [touched, setTouched] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+
+    const isEmpty = (key) => !values[key].trim();
+    const filled = FIELDS.every((f) => !isEmpty(f.key));
+    const nothingYet = FIELDS.every((f) => !(submission[f.key] || '').trim());
+
+    const change = (key) => (e) => {
+        setValues((prev) => ({...prev, [key]: e.target.value}));
+        setSuccess(false);
+        setError(null);
+    };
 
     const handleSave = async () => {
-        setSaving(true);
+        setTouched(true);
+        setSuccess(false);
         setError(null);
+        if (!filled) {
+            setError('Заполните все поля — они обязательны');
+            return;
+        }
+        setSaving(true);
         try {
             const userId = localStorage.getItem('userId');
             await ApiService.updateCourseworkSubmission(submission.courseworkId, userId, {
-                placeOfPractice,
-                topic,
-                description,
+                placeOfPractice: values.placeOfPractice.trim(),
+                topic: values.topic.trim(),
+                description: values.description.trim(),
             });
+            setSuccess(true);
             onSaved && onSaved();
         } catch (err) {
-            setError(err.message || 'Не удалось сохранить');
+            setError((typeof err === 'string' ? err : err?.message) || 'Не удалось сохранить. Попробуйте ещё раз');
         } finally {
             setSaving(false);
         }
@@ -32,65 +70,78 @@ const CourseworkCard = ({submission, onSaved}) => {
     return (
         <Card variant="outlined" sx={{borderRadius: 2, mb: 2}}>
             <CardContent>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{mb: 1.5}}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{mb: 1}}>
                     <Typography variant="h6" fontWeight={600}>
                         {submission.courseworkTitle}
                     </Typography>
                     {submission.approved ? (
                         <Chip size="small" color="success" label="Утверждено"/>
+                    ) : nothingYet ? (
+                        <Chip size="small" color="warning" label="Не заполнено"/>
                     ) : (
-                        <Chip size="small" label="Черновик"/>
+                        <Chip size="small" label="На проверке"/>
                     )}
                 </Stack>
 
                 {submission.approved ? (
                     <Box>
-                        <Typography variant="body2" color="text.secondary">Место практики</Typography>
-                        <Typography variant="body1" sx={{mb: 1.5}}>{submission.placeOfPractice || '—'}</Typography>
-
-                        <Typography variant="body2" color="text.secondary">Тема</Typography>
-                        <Typography variant="body1" sx={{mb: 1.5}}>{submission.topic || '—'}</Typography>
-
-                        <Typography variant="body2" color="text.secondary">Описание</Typography>
-                        <Typography variant="body1">{submission.description || '—'}</Typography>
+                        <Alert severity="success" sx={{mb: 2}}>Тема утверждена преподавателем. Изменить данные нельзя.</Alert>
+                        {FIELDS.map((f) => (
+                            <Box key={f.key} sx={{mb: 1.5}}>
+                                <Typography variant="body2" color="text.secondary">{f.label}</Typography>
+                                <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{submission[f.key] || '—'}</Typography>
+                            </Box>
+                        ))}
                     </Box>
                 ) : (
                     <Box>
-                        <TextField
-                            label="Место практики"
-                            fullWidth
-                            margin="dense"
-                            value={placeOfPractice}
-                            onChange={(e) => setPlaceOfPractice(e.target.value)}
-                        />
-                        <TextField
-                            label="Тема"
-                            fullWidth
-                            margin="dense"
-                            value={topic}
-                            onChange={(e) => setTopic(e.target.value)}
-                        />
-                        <TextField
-                            label="Описание"
-                            fullWidth
-                            multiline
-                            minRows={2}
-                            margin="dense"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
+                        {nothingYet && !success && (
+                            <Alert severity="warning" sx={{mb: 1}}>
+                                Заполните место практики, тему и описание — все поля обязательны.
+                            </Alert>
+                        )}
+                        {FIELDS.map((f) => {
+                            const invalid = touched && isEmpty(f.key);
+                            return (
+                                <TextField
+                                    key={f.key}
+                                    label={f.label}
+                                    required
+                                    fullWidth
+                                    multiline={f.multiline}
+                                    minRows={f.multiline ? 3 : undefined}
+                                    margin="dense"
+                                    value={values[f.key]}
+                                    onChange={change(f.key)}
+                                    error={invalid}
+                                    helperText={invalid ? 'Обязательное поле' : f.hint}
+                                    disabled={saving}
+                                />
+                            );
+                        })}
 
-                        {error && <Typography color="error" variant="body2" sx={{mt: 1}}>{error}</Typography>}
+                        {error && <Alert severity="error" sx={{mt: 1.5}}>{error}</Alert>}
+                        {success && (
+                            <Alert severity="success" sx={{mt: 1.5}}>
+                                Сохранено. Данные отправлены преподавателю.
+                            </Alert>
+                        )}
 
-                        <Button
-                            variant="contained"
-                            size="small"
-                            sx={{mt: 1.5}}
-                            onClick={handleSave}
-                            disabled={saving}
-                        >
-                            {saving ? <CircularProgress size={18}/> : 'Сохранить'}
-                        </Button>
+                        <Stack direction="row" alignItems="center" spacing={2} sx={{mt: 2}}>
+                            <Button
+                                variant="contained"
+                                startIcon={saving ? <CircularProgress size={16} color="inherit"/> : <SaveOutlinedIcon/>}
+                                onClick={handleSave}
+                                disabled={saving}
+                            >
+                                {saving ? 'Сохраняем…' : 'Сохранить'}
+                            </Button>
+                            {submission.savedAt && (
+                                <Typography variant="caption" color="text.secondary">
+                                    Последнее сохранение: {formatSaved(submission.savedAt)}
+                                </Typography>
+                            )}
+                        </Stack>
                     </Box>
                 )}
             </CardContent>
