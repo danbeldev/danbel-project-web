@@ -5,9 +5,9 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ApiService from '../network/API';
 
 const FIELDS = [
-    {key: 'placeOfPractice', label: 'Место практики', hint: 'Где вы будете проходить практику', multiline: false},
-    {key: 'topic', label: 'Тема', hint: 'Тема прошлого года', multiline: false},
-    {key: 'description', label: 'Описание', hint: 'Чем занимается организация, в которой вы проходите практику', multiline: true},
+    {key: 'placeOfPractice', label: 'Место практики', hint: 'Где вы будете проходить практику', multiline: false, required: true},
+    {key: 'topic', label: 'Тема', hint: '', multiline: false, required: false},
+    {key: 'description', label: 'Описание', hint: 'Чем занимается организация, в которой вы проходите практику', multiline: true, required: true},
 ];
 
 const formatSaved = (iso) =>
@@ -35,8 +35,8 @@ const CourseworkCard = ({submission, onSaved}) => {
     const [open, setOpen] = useState(false);
 
     const isEmpty = (key) => !values[key].trim();
-    const filled = FIELDS.every((f) => !isEmpty(f.key));
-    const nothingYet = FIELDS.every((f) => !(submission[f.key] || '').trim());
+    const filled = FIELDS.every((f) => !f.required || !isEmpty(f.key));
+    const nothingYet = FIELDS.every((f) => !f.required || !(submission[f.key] || '').trim());
 
     const change = (key) => (e) => {
         setValues((prev) => ({...prev, [key]: e.target.value}));
@@ -49,7 +49,7 @@ const CourseworkCard = ({submission, onSaved}) => {
         setSuccess(false);
         setError(null);
         if (!filled) {
-            setError('Заполните все поля — они обязательны');
+            setError('Заполните обязательные поля');
             return;
         }
         setSaving(true);
@@ -91,7 +91,7 @@ const CourseworkCard = ({submission, onSaved}) => {
                         {success && <Alert severity="success" sx={{mb: 1.5}}>Сохранено. Данные отправлены преподавателю.</Alert>}
                         {!success && nothingYet && !submission.approved && (
                             <Typography variant="body2" color="text.secondary" sx={{mb: 1.5}}>
-                                Нужно указать место практики, тему и описание.
+                                Нужно указать место практики и описание.
                             </Typography>
                         )}
                         {!nothingYet && (
@@ -130,12 +130,12 @@ const CourseworkCard = ({submission, onSaved}) => {
                     ) : (
                         <Box>
                             {FIELDS.map((f) => {
-                                const invalid = touched && isEmpty(f.key);
+                                const invalid = touched && f.required && isEmpty(f.key);
                                 return (
                                     <TextField
                                         key={f.key}
                                         label={f.label}
-                                        required
+                                        required={f.required}
                                         fullWidth
                                         multiline={f.multiline}
                                         minRows={f.multiline ? 3 : undefined}
