@@ -29,6 +29,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {useParams, Link} from 'react-router-dom';
 import ApiService from '../network/API';
 
@@ -87,6 +88,20 @@ export const CourseworkDetailsPage = () => {
             setToast({severity: 'success', message: 'Сохранено'});
         } catch (err) {
             setToast({severity: 'error', message: err.message || 'Не удалось сохранить'});
+        } finally {
+            setSavingUserId(null);
+        }
+    };
+
+    const handleClarify = async (row) => {
+        const next = !row.needsClarification;
+        setSavingUserId(row.userId);
+        try {
+            await ApiService.setCourseworkNeedsClarification(id, row.userId, next);
+            updateRow(row.userId, 'needsClarification', next);
+            setToast({severity: 'success', message: next ? 'Отмечен: попадёт в напоминание' : 'Отметка снята'});
+        } catch (err) {
+            setToast({severity: 'error', message: err.message || 'Не удалось отметить'});
         } finally {
             setSavingUserId(null);
         }
@@ -289,6 +304,9 @@ export const CourseworkDetailsPage = () => {
                                         ) : (
                                             <Chip size="small" label="Черновик"/>
                                         )}
+                                        {row.needsClarification && (
+                                            <Chip size="small" color="warning" variant="outlined" label="Дополнить описание" sx={{ml: 0.5}}/>
+                                        )}
                                     </TableCell>
                                     <TableCell align="center">
                                         <Tooltip title="Сохранить">
@@ -299,6 +317,20 @@ export const CourseworkDetailsPage = () => {
                                                     disabled={row.approved || busy}
                                                 >
                                                     <SaveIcon fontSize="small"/>
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                        <Tooltip title={row.needsClarification
+                                            ? 'Снять отметку «дополнить описание»'
+                                            : 'Отметить: не описано, чем занимается организация (попадёт в напоминание)'}>
+                                            <span>
+                                                <IconButton
+                                                    size="small"
+                                                    color={row.needsClarification ? 'warning' : 'default'}
+                                                    onClick={() => handleClarify(row)}
+                                                    disabled={busy || !(row.placeOfPractice || '').trim()}
+                                                >
+                                                    <HelpOutlineIcon fontSize="small"/>
                                                 </IconButton>
                                             </span>
                                         </Tooltip>

@@ -321,6 +321,15 @@ const ApiService = {
         }
     },
 
+    setCourseworkNeedsClarification: async (courseworkId, userId, enabled) => {
+        try {
+            const response = await api.put(`/courseworks/${courseworkId}/submissions/${userId}/needs-clarification`, {enabled});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     remindCourseworkPlace: async (courseworkId) => {
         try {
             const response = await api.post(`/courseworks/${courseworkId}/remind`);
