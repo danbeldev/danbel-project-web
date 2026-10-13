@@ -143,7 +143,7 @@ export const CourseworkDetailsPage = () => {
 
     const handleSendApproved = async () => {
         const count = rows.filter((r) => r.approved).length;
-        if (!window.confirm(`Отправить в чаты групп утверждённые темы (${count}) и просьбу их проверить?`)) return;
+        if (!window.confirm(`Отправить в чаты групп Excel-таблицу с утверждёнными темами (${count}); через 15 секунд придёт просьба проверить?`)) return;
         setSendingApproved(true);
         try {
             const r = await ApiService.sendApprovedCourseworks(id);
