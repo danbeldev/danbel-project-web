@@ -29,6 +29,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {useParams, Link} from 'react-router-dom';
 import ApiService from '../network/API';
@@ -57,6 +58,7 @@ export const CourseworkDetailsPage = () => {
     const [toast, setToast] = useState(null);
     const [groupFilter, setGroupFilter] = useState('all');
     const [reminding, setReminding] = useState(false);
+    const [sendingApproved, setSendingApproved] = useState(false);
 
     const load = () => {
         ApiService.getCourseworkById(id)
@@ -136,6 +138,24 @@ export const CourseworkDetailsPage = () => {
             setToast({severity: 'error', message: err.message || 'Не удалось отправить'});
         } finally {
             setReminding(false);
+        }
+    };
+
+    const handleSendApproved = async () => {
+        const count = rows.filter((r) => r.approved).length;
+        if (!window.confirm(`Отправить в чаты групп утверждённые темы (${count}) и просьбу их проверить?`)) return;
+        setSendingApproved(true);
+        try {
+            const r = await ApiService.sendApprovedCourseworks(id);
+            const parts = [];
+            if (r.sent) parts.push(`отправлено в чаты групп: ${r.sent}`);
+            if (r.noApproved) parts.push(`нет утверждённых: ${r.noApproved}`);
+            if (r.noChat) parts.push(`нет чата у групп: ${r.noChat}`);
+            setToast({severity: r.sent ? 'success' : 'info', message: parts.join(', ') || 'Нечего отправлять'});
+        } catch (err) {
+            setToast({severity: 'error', message: err.message || 'Не удалось отправить'});
+        } finally {
+            setSendingApproved(false);
         }
     };
 
@@ -232,6 +252,14 @@ export const CourseworkDetailsPage = () => {
                         disabled={reminding}
                     >
                         Напомнить в чатах групп
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        startIcon={<FactCheckOutlinedIcon/>}
+                        onClick={handleSendApproved}
+                        disabled={sendingApproved || !rows.some((r) => r.approved)}
+                    >
+                        Отправить утверждённые темы
                     </Button>
                     <FormControlLabel
                         control={

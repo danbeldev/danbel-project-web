@@ -330,6 +330,15 @@ const ApiService = {
         }
     },
 
+    sendApprovedCourseworks: async (courseworkId) => {
+        try {
+            const response = await api.post(`/courseworks/${courseworkId}/send-approved`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
     remindCourseworkPlace: async (courseworkId) => {
         try {
             const response = await api.post(`/courseworks/${courseworkId}/remind`);
