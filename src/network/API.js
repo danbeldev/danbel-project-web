@@ -943,6 +943,38 @@ const ApiService = {
             throw error.response?.data || error.message;
         }
     },
+    startInputAiCheck: async (problemId, force) => {
+        try {
+            const response = await api.post(`/problems/${problemId}/ai-check`, null, {params: {force: !!force}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getInputAiCheckStatus: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/ai-check`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getInputAnswers: async (problemId) => {
+        try {
+            const response = await api.get(`/problems/${problemId}/input-answers`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    setSubmissionVerdict: async (submissionId, correct, comment) => {
+        try {
+            const response = await api.put(`/problems/submissions/${submissionId}/verdict`, {correct, comment});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
     getSubmissionDetails: async (submissionId) => {
         try {
             const response = await api.get(`/problems/submissions/${submissionId}`);

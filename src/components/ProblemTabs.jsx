@@ -168,11 +168,11 @@ function ProblemTabs({problem, submissions, handleSubmissionClick, updateSubmiss
                             >
                                 <Box display="flex" justifyContent="space-between" alignItems="center">
                                     <Typography>
-                                        #{s.id} • {s.language.name}
+                                        {s.problemType === 'INPUT' ? `Ответ #${s.id}` : `#${s.id} • ${s.language.name}`}
                                     </Typography>
                                     <Box display="flex" alignItems="center" gap={1}>
                                         <Chip
-                                            label={s.status}
+                                            label={s.problemType === 'INPUT' ? ({PENDING: 'Ожидает проверки', SUCCESS: 'Верно', FAILED: 'Неверно'}[s.status] || s.status) : s.status}
                                             size="small"
                                             color={
                                                 s.status === "SUCCESS"

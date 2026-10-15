@@ -11,11 +11,13 @@ import {
     useTheme,
     useMediaQuery,
     Tabs,
-    Tab, Checkbox, Card, CardContent, FormControlLabel, Stack, Button
+    Tab, Checkbox, Card, CardContent, FormControlLabel, Stack, Button, TextField
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RuleIcon from '@mui/icons-material/Rule';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import QuestionAnswerOutlinedIcon from '@mui/icons-material/QuestionAnswerOutlined';
+import InputAnswersDialog from '../components/InputAnswersDialog';
 import {useNavigate, useParams} from 'react-router-dom';
 import {Editor} from '@monaco-editor/react';
 import ApiService from '../network/API';
@@ -84,7 +86,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
     const isAdminUser = ApiService.isAdmin();
     const showCriteriaButton = CRITERIA_TYPES.includes(problem?.type) && (isAdminUser || hasCriteria);
-    const rulesBar = (!isAdminUser || showCriteriaButton) && (
+    const showAnswersButton = isAdminUser && problem?.type === 'INPUT';
+    const rulesBar = (!isAdminUser || showCriteriaButton || showAnswersButton) && (
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{mb: 1}}>
             {!isAdminUser && (
                 <Button size="small" variant="outlined" startIcon={<InfoOutlinedIcon/>} onClick={() => setRulesOpen(true)}>
@@ -99,6 +102,11 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             {isAdminUser && showCriteriaButton && (
                 <Button size="small" variant="contained" startIcon={<FactCheckIcon/>} onClick={() => navigate(`/admin/problems/${problemId}/grading`)}>
                     Проверка работ
+                </Button>
+            )}
+            {showAnswersButton && (
+                <Button size="small" variant="contained" startIcon={<QuestionAnswerOutlinedIcon/>} onClick={() => setAnswersOpen(true)}>
+                    Ответы студентов и AI-проверка
                 </Button>
             )}
             {!isAdminUser && pairInfo?.allowed && !pairInfo.partner && !pairInfo.partnerOf && !pairInfo.locked && !pairInfo.closed && (
@@ -129,6 +137,8 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     const [mobileTab, setMobileTab] = useState(0);
 
     const [selectedAnswers, setSelectedAnswers] = useState([]);
+    const [answerText, setAnswerText] = useState('');
+    const [answersOpen, setAnswersOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -145,7 +155,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             // обновили, пока шла проверка) — открываем модалку заново, не даём
             // студенту потерять из виду попытку, которая уже отправлена.
             const lastSubmission = subs[0];
-            if (lastSubmission && PENDING_STATUSES.includes(lastSubmission.status)) {
+            if (lastSubmission && problemData.type !== 'INPUT' && PENDING_STATUSES.includes(lastSubmission.status)) {
                 handleSubmissionClick(lastSubmission.id);
             }
         };
@@ -165,12 +175,16 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     }, [problemId, selectedLanguage]);
 
     const handleSubmit = async () => {
+        if (problem.type === 'INPUT' && !answerText.trim()) {
+            alert('Напишите ответ перед отправкой.');
+            return;
+        }
         showFullscreenAd();
 
         let submissionId;
         try {
             submissionId = await ApiService.submitSolution(problemId, {
-                code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : code,
+                code: problem.type === 'ANSWERS' ? selectedAnswers.join(",") : problem.type === 'INPUT' ? answerText : code,
                 languageId: selectedLanguage,
             });
         } catch (err) {
@@ -193,7 +207,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     const PENDING_STATUSES = ['PENDING', 'RUNNING'];
 
     useEffect(() => {
-        if (!openModal || !submissionDetail || !PENDING_STATUSES.includes(submissionDetail.status)) {
+        if (!openModal || !submissionDetail || submissionDetail.problemType === 'INPUT' || !PENDING_STATUSES.includes(submissionDetail.status)) {
             return;
         }
 
@@ -234,6 +248,34 @@ export const ProblemCodeDetailsPage = ({mode}) => {
     };
 
     if (!problem) return <Typography>Загрузка...</Typography>;
+
+    const codeInput = problem.type === 'INPUT' ? (
+        <TextField
+            multiline
+            fullWidth
+            minRows={8}
+            maxRows={20}
+            placeholder="Напишите ответ своими словами. Проверяется последний отправленный ответ."
+            value={answerText}
+            onChange={(e) => setAnswerText(e.target.value)}
+            inputProps={{maxLength: 6000}}
+            helperText={`${answerText.length}/6000`}
+            sx={{p: 1}}
+        />
+    ) : (
+        <Editor
+            language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
+            value={code}
+            onChange={(value) => setCode(value || '')}
+            options={{
+                minimap: {enabled: false},
+                fontSize: 14,
+            }}
+            height="100%"
+            width="100%"
+            theme={mode === 'dark' ? "vs-dark" : "vs"}
+        />
+    );
 
     return (
         <>
@@ -416,18 +458,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                         </Box>
                                     </Box>
                                     :
-                                    <Editor
-                                        language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
-                                        value={code}
-                                        onChange={(value) => setCode(value || '')}
-                                        options={{
-                                            minimap: {enabled: false},
-                                            fontSize: 14,
-                                        }}
-                                        height="100%"
-                                        width="100%"
-                                        theme={mode === 'dark' ? "vs-dark" : "vs"}
-                                    />
+                                    {codeInput}
                                 }
                             </Box>
                         </Box>
@@ -580,18 +611,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     </Box>
                                 </Box>
                                 :
-                                <Editor
-                                    language={languages.find((l) => l.id === selectedLanguage)?.name || 'java'}
-                                    value={code}
-                                    onChange={(value) => setCode(value || '')}
-                                    options={{
-                                        minimap: {enabled: false},
-                                        fontSize: 14,
-                                    }}
-                                    height="100%"
-                                    width="100%"
-                                    theme={mode === 'dark' ? "vs-dark" : "vs"}
-                                />
+                                {codeInput}
                             }
                         </Box>
                     </Grid>
@@ -607,6 +627,10 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                 deadline={deadline}
                 onPairChanged={loadPairInfo}
             />
+
+            {showAnswersButton && (
+                <InputAnswersDialog open={answersOpen} onClose={() => setAnswersOpen(false)} problemId={problemId}/>
+            )}
 
             <SubmissionDetailsDialog
                 open={openModal}
