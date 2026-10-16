@@ -474,6 +474,38 @@ const ApiService = {
         }
     },
 
+    getGroupAdmission: async (groupId, tagId) => {
+        try {
+            const response = await api.get(`/groups/${groupId}/admission`, {params: {tagId}});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    setAdmissionOverride: async (groupId, userId, tagId, allowed) => {
+        try {
+            const response = await api.put(`/groups/${groupId}/admission/${userId}/${tagId}`, {allowed});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    setAdmissionRequired: async (articleId, required) => {
+        try {
+            const response = await api.put(`/articles/${articleId}/admission-required`, {required});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getMyAdmission: async (tagId) => {
+        try {
+            const response = await api.get(`/tags/${tagId}/admission/my`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
     getGroupDeadlines: async (groupId) => {
         try {
             const response = await api.get(`/groups/${groupId}/deadlines`);

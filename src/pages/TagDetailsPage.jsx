@@ -9,6 +9,7 @@ import {
 import ApiService from '../network/API';
 import ArticleList from "../components/ArticleList";
 import YandexAdBlock from "../components/ads/YandexAdBlock";
+import ExamAdmissionBanner from "../components/ExamAdmissionBanner";
 
 const FEED_BLOCK_ID = "R-A-20141312-5";
 
@@ -65,6 +66,8 @@ const TagDetailsPage = () => {
             </Typography>
 
             <div style={{height: "20px"}}/>
+
+            <ExamAdmissionBanner tagId={id}/>
 
             <ArticleList tagIds={[id]} authorIds={[]}/>
             <YandexAdBlock blockId={FEED_BLOCK_ID} type="feed"/>

@@ -34,7 +34,9 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    IconButton
+    IconButton,
+    Checkbox,
+    FormControlLabel
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -46,6 +48,7 @@ import SendIcon from '@mui/icons-material/Send';
 import KeyIcon from '@mui/icons-material/Key';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EventIcon from '@mui/icons-material/Event';
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import { format } from 'date-fns';
 import ApiService from '../network/API';
 import { copyToClipboard } from '../copyToClipboard';
@@ -163,6 +166,44 @@ export const GroupDetailsPage = () => {
         loadDeadlines();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
+    // Допуск к экзамену: tagId -> {configured, required, students}.
+    const [admission, setAdmission] = useState({});
+    const [admissionDialog, setAdmissionDialog] = useState(null); // {tagId, name}
+    const [admissionMenu, setAdmissionMenu] = useState(null); // {anchorEl, userId, tagId, name}
+    const [admissionBusy, setAdmissionBusy] = useState(false);
+
+    const loadAdmission = (tagId) =>
+        ApiService.getGroupAdmission(id, tagId)
+            .then((data) => setAdmission((prev) => ({ ...prev, [tagId]: data })))
+            .catch(() => {});
+
+    const toggleLectureRequired = async (tagId, article, required) => {
+        setAdmissionBusy(true);
+        try {
+            await ApiService.setAdmissionRequired(article.id, required);
+            setArticlesByTag((prev) => ({
+                ...prev,
+                [tagId]: (prev[tagId] || []).map((a) => (a.id === article.id ? { ...a, admissionRequired: required } : a)),
+            }));
+            await loadAdmission(tagId);
+        } catch (e) {
+            setActionError((typeof e === 'string' ? e : (e?.reason || e?.message)) || 'Не удалось изменить');
+        } finally {
+            setAdmissionBusy(false);
+        }
+    };
+
+    const setAdmissionDecision = async (allowed) => {
+        const { userId, tagId } = admissionMenu;
+        setAdmissionMenu(null);
+        try {
+            await ApiService.setAdmissionOverride(id, userId, tagId, allowed);
+            await loadAdmission(tagId);
+        } catch (e) {
+            setActionError((typeof e === 'string' ? e : (e?.reason || e?.message)) || 'Не удалось изменить допуск');
+        }
+    };
 
     const toInputValue = (date) => format(date, "yyyy-MM-dd'T'HH:mm");
 
@@ -353,6 +394,14 @@ export const GroupDetailsPage = () => {
                 });
         });
     }, [viewMode, group, subjectsById, articlesByTag]);
+
+    useEffect(() => {
+        if (!group) return;
+        Object.keys(subjectsById).forEach((tagId) => {
+            if (!admission[tagId]) loadAdmission(tagId);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [group, subjectsById]);
 
     if (error) {
         return (
@@ -614,6 +663,14 @@ export const GroupDetailsPage = () => {
                                         {subject.name}
                                     </Typography>
                                     {subject.exam && <Chip label="Экзамен" size="small" color="primary" variant="outlined" />}
+                                    <Button
+                                        size="small"
+                                        startIcon={<VerifiedUserOutlinedIcon />}
+                                        disabled={!articles || articles.length === 0}
+                                        onClick={() => setAdmissionDialog({ tagId: subject.id, name: subject.name })}
+                                    >
+                                        Допуск к экзамену
+                                    </Button>
                                 </Stack>
 
                                 {!articles ? (
@@ -659,6 +716,11 @@ export const GroupDetailsPage = () => {
                                                     <TableCell align="center" sx={{ fontWeight: 700, minWidth: 100 }}>
                                                         Средний балл
                                                     </TableCell>
+                                                    {admission[subject.id]?.configured && (
+                                                        <TableCell align="center" sx={{ fontWeight: 700, minWidth: 130 }}>
+                                                            Допуск
+                                                        </TableCell>
+                                                    )}
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -709,6 +771,28 @@ export const GroupDetailsPage = () => {
                                                                     <Typography variant="body2" color="text.disabled">—</Typography>
                                                                 )}
                                                             </TableCell>
+                                                            {admission[subject.id]?.configured && (() => {
+                                                                const st = admission[subject.id].students.find((x) => x.userId === user.id);
+                                                                if (!st) return <TableCell />;
+                                                                const ok = st.status === 'ADMITTED';
+                                                                const tip = st.missing.length > 0
+                                                                    ? `Нет оценки 3+: ${st.missing.map((m) => m.title).join(', ')}`
+                                                                    : 'Все лекции допуска сданы';
+                                                                return (
+                                                                    <TableCell align="center">
+                                                                        <Tooltip title={`${tip}${st.manual != null ? ' · решение преподавателя' : ''}`}>
+                                                                            <Chip
+                                                                                size="small"
+                                                                                clickable
+                                                                                color={ok ? 'success' : 'error'}
+                                                                                variant={st.manual != null ? 'filled' : 'outlined'}
+                                                                                label={`${ok ? 'Допущен' : 'Не допущен'} · ${st.passed}/${st.required}`}
+                                                                                onClick={(e) => setAdmissionMenu({ anchorEl: e.currentTarget, userId: user.id, tagId: subject.id, name: formatFullName(user) || user.username, manual: st.manual })}
+                                                                            />
+                                                                        </Tooltip>
+                                                                    </TableCell>
+                                                                );
+                                                            })()}
                                                         </TableRow>
                                                     );
                                                 })}
@@ -742,6 +826,48 @@ export const GroupDetailsPage = () => {
                     Убрать оценку
                 </MenuItem>
             </Menu>
+
+            {/* Допуск к экзамену: меню решения по студенту */}
+            <Menu anchorEl={admissionMenu?.anchorEl} open={Boolean(admissionMenu)} onClose={() => setAdmissionMenu(null)}>
+                <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 0.5, display: 'block' }}>
+                    {admissionMenu?.name}
+                </Typography>
+                <MenuDivider />
+                <MenuItem onClick={() => setAdmissionDecision(true)}>Допустить (вручную)</MenuItem>
+                <MenuItem onClick={() => setAdmissionDecision(false)}>Не допускать (вручную)</MenuItem>
+                <MenuItem disabled={admissionMenu?.manual == null} onClick={() => setAdmissionDecision(null)}>
+                    Считать по оценкам
+                </MenuItem>
+            </Menu>
+
+            {/* Допуск к экзамену: какие лекции входят */}
+            <Dialog open={Boolean(admissionDialog)} onClose={() => setAdmissionDialog(null)} maxWidth="sm" fullWidth>
+                <DialogTitle>Допуск к экзамену — {admissionDialog?.name}</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Отметьте лекции, которые нужно сдать минимум на 3, чтобы получить допуск. Отметка относится к лекции, поэтому
+                        действует для всех групп предмета. Допуск считается автоматически, а по студенту его можно решить вручную.
+                    </Typography>
+                    <Stack>
+                        {(articlesByTag[admissionDialog?.tagId] || []).map((article) => (
+                            <FormControlLabel
+                                key={article.id}
+                                control={
+                                    <Checkbox
+                                        checked={Boolean(article.admissionRequired)}
+                                        disabled={admissionBusy}
+                                        onChange={(e) => toggleLectureRequired(admissionDialog.tagId, article, e.target.checked)}
+                                    />
+                                }
+                                label={article.title}
+                            />
+                        ))}
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAdmissionDialog(null)}>Закрыть</Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Срок сдачи лекции для группы */}
             <Dialog open={Boolean(deadlineDialog)} onClose={() => !deadlineSaving && setDeadlineDialog(null)} maxWidth="xs" fullWidth>
