@@ -545,6 +545,7 @@ const ApiService = {
     getMyExamAttempt: (attemptId) => examCall(() => api.get(`/exams/attempts/${attemptId}/my`)),
     finishExam: (attemptId) => examCall(() => api.post(`/exams/attempts/${attemptId}/finish`)),
 
+    sendAdmissionToChat: (groupId, tagId) => examCall(() => api.post(`/groups/${groupId}/admission/send`, null, {params: {tagId}})),
     getMyAdmission: async (tagId) => {
         try {
             const response = await api.get(`/tags/${tagId}/admission/my`);

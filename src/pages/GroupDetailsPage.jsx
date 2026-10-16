@@ -209,6 +209,16 @@ export const GroupDetailsPage = () => {
         }
     };
 
+    const sendAdmissionToChat = async (tagId, name) => {
+        if (!window.confirm(`Отправить в чат группы допуск к экзамену по «${name}»: кто допущен, кто нет, какие лекции и до какого срока сдать?`)) return;
+        try {
+            const r = await ApiService.sendAdmissionToChat(id, tagId);
+            setSuccessMessage(r.sent ? 'Допуск отправлен в чат группы' : 'У группы нет привязанного чата (Max/VK) — сообщение не отправлено');
+        } catch (e) {
+            setActionError((typeof e === 'string' ? e : (e?.reason || e?.message)) || 'Не удалось отправить допуск');
+        }
+    };
+
     const setAdmissionDecision = async (allowed) => {
         const { userId, tagId } = admissionMenu;
         setAdmissionMenu(null);
@@ -686,6 +696,11 @@ export const GroupDetailsPage = () => {
                                     >
                                         Допуск и подготовка к экзамену
                                     </Button>
+                                    {admission[subject.id]?.configured && (
+                                        <Button size="small" onClick={() => sendAdmissionToChat(subject.id, subject.name)}>
+                                            Отправить допуск в чат
+                                        </Button>
+                                    )}
                                     <Button size="small" onClick={() => navigate(`/admin/exams/${subject.id}`)}>
                                         Экзамен: билеты и проведение
                                     </Button>
