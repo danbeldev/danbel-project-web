@@ -474,6 +474,14 @@ const ApiService = {
         }
     },
 
+    getGroupDeadlines: async (groupId) => {
+        try {
+            const response = await api.get(`/groups/${groupId}/deadlines`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
     setDeadline: async (articleId, groupId, closesAt) => {
         try {
             const response = await api.put(`/articles/${articleId}/groups/${groupId}/deadline`, { closesAt });

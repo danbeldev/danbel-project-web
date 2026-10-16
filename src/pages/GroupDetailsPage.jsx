@@ -45,6 +45,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
 import KeyIcon from '@mui/icons-material/Key';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import EventIcon from '@mui/icons-material/Event';
+import { format } from 'date-fns';
 import ApiService from '../network/API';
 import { copyToClipboard } from '../copyToClipboard';
 
@@ -145,6 +147,55 @@ export const GroupDetailsPage = () => {
         fetchGroup();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
+
+    // Сроки сдачи лекций для этой группы: articleId -> {closesAt, closed}.
+    const [deadlines, setDeadlines] = useState({});
+    const [deadlineDialog, setDeadlineDialog] = useState(null); // {articleId, title, value}
+    const [deadlineSaving, setDeadlineSaving] = useState(false);
+    const [deadlineError, setDeadlineError] = useState(null);
+
+    const loadDeadlines = () =>
+        ApiService.getGroupDeadlines(id)
+            .then((list) => setDeadlines(Object.fromEntries(list.map((d) => [d.articleId, d]))))
+            .catch(() => {});
+
+    useEffect(() => {
+        loadDeadlines();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
+
+    const toInputValue = (date) => format(date, "yyyy-MM-dd'T'HH:mm");
+
+    const openDeadlineDialog = (article) => {
+        const current = deadlines[article.id]?.closesAt;
+        setDeadlineError(null);
+        setDeadlineDialog({ articleId: article.id, title: article.title, value: current ? toInputValue(new Date(current)) : '' });
+    };
+
+    // Продлить: от текущего срока, если он ещё не прошёл, иначе от сейчас.
+    const extendDeadline = (days) => {
+        const current = deadlines[deadlineDialog.articleId]?.closesAt;
+        const typed = deadlineDialog.value ? new Date(deadlineDialog.value) : null;
+        const base = typed && typed.getTime() > Date.now() ? typed : (current && new Date(current).getTime() > Date.now() ? new Date(current) : new Date());
+        const next = new Date(base.getTime() + days * 24 * 3600 * 1000);
+        setDeadlineDialog((prev) => ({ ...prev, value: toInputValue(next) }));
+    };
+
+    const saveDeadline = async (clear) => {
+        setDeadlineSaving(true);
+        setDeadlineError(null);
+        try {
+            const value = clear ? null : (deadlineDialog.value ? new Date(deadlineDialog.value).toISOString() : null);
+            await ApiService.setDeadline(deadlineDialog.articleId, Number(id), value);
+            await loadDeadlines();
+            setSuccessMessage(clear || !value ? 'Срок снят' : 'Срок сохранён');
+            setDeadlineDialog(null);
+        } catch (e) {
+            setDeadlineError((typeof e === 'string' ? e : (e?.reason || e?.message)) || 'Не удалось сохранить срок');
+        } finally {
+            setDeadlineSaving(false);
+        }
+    };
 
     const openGradeMenu = (event, { userId, username, articleId, articleTitle }) => {
         setEditCell({ anchorEl: event.currentTarget, userId, username, articleId, articleTitle });
@@ -589,6 +640,20 @@ export const GroupDetailsPage = () => {
                                                             onClick={() => navigate(`/articles/${article.id}`)}
                                                         >
                                                             {article.title}
+                                                            <Tooltip title="Срок сдачи для группы — нажмите, чтобы изменить или продлить">
+                                                                <Chip
+                                                                    size="small"
+                                                                    icon={<EventIcon />}
+                                                                    clickable
+                                                                    variant="outlined"
+                                                                    color={deadlines[article.id] ? (deadlines[article.id].closed ? 'error' : 'primary') : 'default'}
+                                                                    label={deadlines[article.id]
+                                                                        ? `${deadlines[article.id].closed ? 'закрыто ' : 'до '}${format(new Date(deadlines[article.id].closesAt), 'dd.MM HH:mm')}`
+                                                                        : 'без срока'}
+                                                                    onClick={(e) => { e.stopPropagation(); openDeadlineDialog(article); }}
+                                                                    sx={{ display: 'flex', mt: 0.5, mx: 'auto', width: 'fit-content', fontWeight: 400 }}
+                                                                />
+                                                            </Tooltip>
                                                         </TableCell>
                                                     ))}
                                                     <TableCell align="center" sx={{ fontWeight: 700, minWidth: 100 }}>
@@ -677,6 +742,42 @@ export const GroupDetailsPage = () => {
                     Убрать оценку
                 </MenuItem>
             </Menu>
+
+            {/* Срок сдачи лекции для группы */}
+            <Dialog open={Boolean(deadlineDialog)} onClose={() => !deadlineSaving && setDeadlineDialog(null)} maxWidth="xs" fullWidth>
+                <DialogTitle>Срок сдачи — {group.name}</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" sx={{ mb: 2 }}>{deadlineDialog?.title}</Typography>
+                    <TextField
+                        type="datetime-local"
+                        fullWidth
+                        value={deadlineDialog?.value ?? ''}
+                        onChange={(e) => setDeadlineDialog((prev) => ({ ...prev, value: e.target.value }))}
+                        helperText="Время в вашем часовом поясе. Пусто — без ограничения."
+                    />
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
+                        {[1, 3, 7].map((days) => (
+                            <Button key={days} size="small" variant="outlined" onClick={() => extendDeadline(days)}>
+                                +{days} {days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}
+                            </Button>
+                        ))}
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+                        «+N дней» отсчитывается от текущего срока (если он ещё не прошёл) или от сейчас. Если срок уже закрыт и вы его продлеваете,
+                        приём решений откроется снова, а автоматические двойки «не решал» снимутся. Группе придёт уведомление о новом сроке.
+                    </Typography>
+                    {deadlineError && <Alert severity="error" sx={{ mt: 2 }}>{deadlineError}</Alert>}
+                </DialogContent>
+                <DialogActions>
+                    <Button color="inherit" onClick={() => saveDeadline(true)} disabled={deadlineSaving || !deadlines[deadlineDialog?.articleId]}>
+                        Снять срок
+                    </Button>
+                    <Button onClick={() => setDeadlineDialog(null)} disabled={deadlineSaving}>Отмена</Button>
+                    <Button variant="contained" onClick={() => saveDeadline(false)} disabled={deadlineSaving || !deadlineDialog?.value}>
+                        Сохранить
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Добавление студентов */}
             <Dialog open={addDialogOpen} onClose={closeAddDialog} maxWidth="sm" fullWidth>
