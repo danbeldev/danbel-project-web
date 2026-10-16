@@ -194,6 +194,21 @@ export const GroupDetailsPage = () => {
         }
     };
 
+    const toggleLecturePrep = async (tagId, article, prep) => {
+        setAdmissionBusy(true);
+        try {
+            await ApiService.setExamPrep(article.id, prep);
+            setArticlesByTag((prev) => ({
+                ...prev,
+                [tagId]: (prev[tagId] || []).map((a) => (a.id === article.id ? { ...a, examPrep: prep } : a)),
+            }));
+        } catch (e) {
+            setActionError((typeof e === 'string' ? e : (e?.reason || e?.message)) || 'Не удалось изменить');
+        } finally {
+            setAdmissionBusy(false);
+        }
+    };
+
     const setAdmissionDecision = async (allowed) => {
         const { userId, tagId } = admissionMenu;
         setAdmissionMenu(null);
@@ -669,7 +684,7 @@ export const GroupDetailsPage = () => {
                                         disabled={!articles || articles.length === 0}
                                         onClick={() => setAdmissionDialog({ tagId: subject.id, name: subject.name })}
                                     >
-                                        Допуск к экзамену
+                                        Допуск и подготовка к экзамену
                                     </Button>
                                 </Stack>
 
@@ -842,25 +857,38 @@ export const GroupDetailsPage = () => {
 
             {/* Допуск к экзамену: какие лекции входят */}
             <Dialog open={Boolean(admissionDialog)} onClose={() => setAdmissionDialog(null)} maxWidth="sm" fullWidth>
-                <DialogTitle>Допуск к экзамену — {admissionDialog?.name}</DialogTitle>
+                <DialogTitle>Экзамен: допуск и подготовка — {admissionDialog?.name}</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Отметьте лекции, которые нужно сдать минимум на 3, чтобы получить допуск. Отметка относится к лекции, поэтому
-                        действует для всех групп предмета. Допуск считается автоматически, а по студенту его можно решить вручную.
+                        «Допуск» — лекции, которые нужно сдать минимум на 3, чтобы получить допуск (считается автоматически, по студенту его
+                        можно решить вручную). «Подготовка» — лекции, по которым студенты готовятся к экзамену, они показываются им на странице
+                        предмета. Отметки относятся к лекции, поэтому действуют для всех групп предмета.
                     </Typography>
+                    <Stack direction="row" sx={{ px: 1, mb: 0.5 }}>
+                        <Typography variant="caption" fontWeight={700} sx={{ flex: 1 }}>Лекция</Typography>
+                        <Typography variant="caption" fontWeight={700} sx={{ width: 90, textAlign: 'center' }}>Допуск</Typography>
+                        <Typography variant="caption" fontWeight={700} sx={{ width: 100, textAlign: 'center' }}>Подготовка</Typography>
+                    </Stack>
+                    <Divider />
                     <Stack>
                         {(articlesByTag[admissionDialog?.tagId] || []).map((article) => (
-                            <FormControlLabel
-                                key={article.id}
-                                control={
+                            <Stack key={article.id} direction="row" alignItems="center" sx={{ px: 1 }}>
+                                <Typography variant="body2" sx={{ flex: 1 }}>{article.title}</Typography>
+                                <Box sx={{ width: 90, textAlign: 'center' }}>
                                     <Checkbox
                                         checked={Boolean(article.admissionRequired)}
                                         disabled={admissionBusy}
                                         onChange={(e) => toggleLectureRequired(admissionDialog.tagId, article, e.target.checked)}
                                     />
-                                }
-                                label={article.title}
-                            />
+                                </Box>
+                                <Box sx={{ width: 100, textAlign: 'center' }}>
+                                    <Checkbox
+                                        checked={Boolean(article.examPrep)}
+                                        disabled={admissionBusy}
+                                        onChange={(e) => toggleLecturePrep(admissionDialog.tagId, article, e.target.checked)}
+                                    />
+                                </Box>
+                            </Stack>
                         ))}
                     </Stack>
                 </DialogContent>

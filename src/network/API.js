@@ -498,6 +498,22 @@ const ApiService = {
             throw error.response?.data || error.message;
         }
     },
+    setExamPrep: async (articleId, prep) => {
+        try {
+            const response = await api.put(`/articles/${articleId}/exam-prep`, {prep});
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+    getExamPrep: async (tagId) => {
+        try {
+            const response = await api.get(`/tags/${tagId}/exam-prep`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
     getMyAdmission: async (tagId) => {
         try {
             const response = await api.get(`/tags/${tagId}/admission/my`);
