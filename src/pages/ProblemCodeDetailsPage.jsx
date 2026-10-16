@@ -458,7 +458,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                         </Box>
                                     </Box>
                                     :
-                                    {codeInput}
+                                    codeInput
                                 }
                             </Box>
                         </Box>
@@ -611,7 +611,7 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                                     </Box>
                                 </Box>
                                 :
-                                {codeInput}
+                                codeInput
                             }
                         </Box>
                     </Grid>
