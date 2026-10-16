@@ -172,7 +172,7 @@ function ProblemTabs({problem, submissions, handleSubmissionClick, updateSubmiss
                                     </Typography>
                                     <Box display="flex" alignItems="center" gap={1}>
                                         <Chip
-                                            label={s.problemType === 'INPUT' ? ({PENDING: 'Ожидает проверки', SUCCESS: 'Верно', FAILED: 'Неверно'}[s.status] || s.status) : s.status}
+                                            label={s.exam && s.status === 'PENDING' ? 'Принято' : s.problemType === 'INPUT' ? ({PENDING: 'Ожидает проверки', SUCCESS: 'Верно', FAILED: 'Неверно'}[s.status] || s.status) : s.status}
                                             size="small"
                                             color={
                                                 s.status === "SUCCESS"

@@ -686,6 +686,9 @@ export const GroupDetailsPage = () => {
                                     >
                                         Допуск и подготовка к экзамену
                                     </Button>
+                                    <Button size="small" onClick={() => navigate(`/admin/exams/${subject.id}`)}>
+                                        Экзамен: билеты и проведение
+                                    </Button>
                                 </Stack>
 
                                 {!articles ? (

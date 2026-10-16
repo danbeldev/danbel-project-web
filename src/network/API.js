@@ -36,6 +36,16 @@ api.interceptors.response.use(
     }
 );
 
+// Обёртка запроса экзаменов: отдаёт data, а при ошибке — тело ответа сервера (или текст).
+const examCall = async (fn) => {
+    try {
+        const response = await fn();
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
 const ApiService = {
     // Auth methods
     // Только для админа: создаёт аккаунт (пароль можно не передавать — сгенерируется сам),
@@ -514,6 +524,27 @@ const ApiService = {
             throw error.response?.data || error.message;
         }
     },
+    // ----- Экзамены -----
+    getExamTickets: (tagId) => examCall(() => api.get(`/exams/tags/${tagId}/tickets`)),
+    createExamTicket: (tagId, title) => examCall(() => api.post(`/exams/tags/${tagId}/tickets`, {title})),
+    renameExamTicket: (ticketId, title) => examCall(() => api.put(`/exams/tickets/${ticketId}`, {title})),
+    deleteExamTicket: (ticketId) => examCall(() => api.delete(`/exams/tickets/${ticketId}`)),
+    removeExamProblem: (ticketId, problemId) => examCall(() => api.delete(`/exams/tickets/${ticketId}/problems/${problemId}`)),
+    getExamEvents: (tagId) => examCall(() => api.get(`/exams/tags/${tagId}/events`)),
+    createExamEvent: (data) => examCall(() => api.post('/exams/events', data)),
+    deleteExamEvent: (eventId) => examCall(() => api.delete(`/exams/events/${eventId}`)),
+    getExamEvent: (eventId) => examCall(() => api.get(`/exams/events/${eventId}`)),
+    grantExam: (eventId, userId) => examCall(() => api.post(`/exams/events/${eventId}/grant/${userId}`)),
+    extendExam: (attemptId, minutes) => examCall(() => api.put(`/exams/attempts/${attemptId}/extend`, {minutes})),
+    resetExamAttempt: (attemptId) => examCall(() => api.delete(`/exams/attempts/${attemptId}`)),
+    gradeExamAttempt: (attemptId, grade, comment) => examCall(() => api.put(`/exams/attempts/${attemptId}/grade`, {grade, comment})),
+    getExamWork: (attemptId) => examCall(() => api.get(`/exams/attempts/${attemptId}/work`)),
+    startExamCheck: (eventId, force) => examCall(() => api.post(`/exams/events/${eventId}/check`, null, {params: {force: !!force}})),
+    getExamCheckStatus: (eventId) => examCall(() => api.get(`/exams/events/${eventId}/check`)),
+    getMyExams: (tagId) => examCall(() => api.get('/exams/my', {params: {tagId}})),
+    getMyExamAttempt: (attemptId) => examCall(() => api.get(`/exams/attempts/${attemptId}/my`)),
+    finishExam: (attemptId) => examCall(() => api.post(`/exams/attempts/${attemptId}/finish`)),
+
     getMyAdmission: async (tagId) => {
         try {
             const response = await api.get(`/tags/${tagId}/admission/my`);

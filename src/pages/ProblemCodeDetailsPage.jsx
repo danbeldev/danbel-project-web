@@ -34,6 +34,7 @@ import MysqlTaskPanel from "../components/MysqlTaskPanel";
 import SubmitStatusChip from "../components/SubmitStatusChip";
 import DeadlineBanner, {useDeadline} from "../components/DeadlineBanner";
 import ProblemNavigator from "../components/ProblemNavigator";
+import ExamProblemBar from "../components/ExamProblemBar";
 import ProblemRulesDialog from "../components/ProblemRulesDialog";
 import {showFullscreenAd} from "../components/ads/showFullscreenAd";
 
@@ -189,6 +190,10 @@ export const ProblemCodeDetailsPage = ({mode}) => {
             });
         } catch (err) {
             // Срок сдачи лекции для группы студента прошёл (сервер отвечает 403 с этим reason).
+            if (err?.reason === 'Экзамен не идёт или время вышло') {
+                alert('Время экзамена вышло — решение не принято.');
+                return;
+            }
             if (err?.reason === 'Приём решений закрыт') {
                 alert('Приём решений закрыт — срок сдачи этой лекции для вашей группы истёк.');
                 return;
@@ -329,9 +334,9 @@ export const ProblemCodeDetailsPage = ({mode}) => {
 
                     {mobileTab === 0 && (
                         <Box p={2}>
-                            <ProblemNavigator articleId={problem.articleId} problemId={problemId}/>
+                            {problem.exam ? <ExamProblemBar attemptId={problem.examAttemptId} problemId={problemId}/> : <ProblemNavigator articleId={problem.articleId} problemId={problemId}/>}
                             <DeadlineBanner deadline={deadline} compact/>
-                            {rulesBar}
+                            {!problem.exam && rulesBar}
                             <Typography variant="h5" gutterBottom>
                                 {problem.title}
                             </Typography>
@@ -469,9 +474,9 @@ export const ProblemCodeDetailsPage = ({mode}) => {
                     {/* Левая часть: условия задачи */}
                     <Grid item xs={5} sx={{overflowY: 'auto', borderRight: '1px solid #eee', p: 3, width: '40%'}}>
                       <Box sx={{maxWidth: 720, mx: 'auto'}}>
-                        <ProblemNavigator articleId={problem.articleId} problemId={problemId}/>
+                        {problem.exam ? <ExamProblemBar attemptId={problem.examAttemptId} problemId={problemId}/> : <ProblemNavigator articleId={problem.articleId} problemId={problemId}/>}
                         <DeadlineBanner deadline={deadline} compact/>
-                        {rulesBar}
+                        {!problem.exam && rulesBar}
                         <Typography variant="h4" gutterBottom>
                             {problem.title}
                         </Typography>

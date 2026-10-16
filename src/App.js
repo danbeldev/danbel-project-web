@@ -28,6 +28,9 @@ import {PrivacyPage} from "./pages/PrivacyPage";
 import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
 import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
 import {CourseworkDetailsPage} from "./pages/CourseworkDetailsPage";
+import AdminExamPage from "./pages/AdminExamPage";
+import AdminExamEventPage from "./pages/AdminExamEventPage";
+import ExamAttemptPage from "./pages/ExamAttemptPage";
 import YandexAdBlock from "./components/ads/YandexAdBlock";
 import FloorAdBlock from "./components/ads/FloorAdBlock";
 import InImageAdInjector from "./components/ads/InImageAdInjector";
@@ -215,6 +218,9 @@ const AppLayout = ({ mode, toggleTheme }) => {
                     <Route path="/privacy" element={<PrivacyPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/admin/courseworks" element={<RequireAuth><AdminCourseworksPage /></RequireAuth>} />
+                    <Route path="/admin/exams/:tagId" element={<RequireAuth><AdminExamPage /></RequireAuth>} />
+                    <Route path="/admin/exam-events/:id" element={<RequireAuth><AdminExamEventPage /></RequireAuth>} />
+                    <Route path="/exams/attempts/:id" element={<RequireAuth><ExamAttemptPage /></RequireAuth>} />
                     <Route path="/admin/courseworks/:id" element={<RequireAuth><CourseworkDetailsPage /></RequireAuth>} />
                     <Route path="*" element={<Navigate to="/articles" />} />
                 </Routes>

@@ -21,9 +21,10 @@ import YandexAdBlock from './ads/YandexAdBlock';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
-    const isInput = submissionDetail?.problemType === 'INPUT';
+    const isExam = Boolean(submissionDetail?.exam);
+    const isInput = submissionDetail?.problemType === 'INPUT' && !isExam;
     // Письменный ответ ждёт проверки (после срока или преподавателем) — это не «идёт проверка», закрыть окно можно.
-    const isPending = !isInput && (submissionDetail?.status === 'PENDING' || submissionDetail?.status === 'RUNNING');
+    const isPending = !isInput && !isExam && (submissionDetail?.status === 'PENDING' || submissionDetail?.status === 'RUNNING');
     // Пока решение проверяется, закрыть модалку нельзя — ни крестиком, ни кликом
     // по фону, ни Escape. При обновлении страницы её заново открывает эффект
     // в ProblemCodeDetailsPage, если последняя отправка ещё не завершена.
@@ -50,6 +51,7 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
 
     const renderResult = () => {
         if (isInput) return renderInputResult();
+        if (isExam && submissionDetail.status === 'PENDING') return null;
         try {
             const resultData = typeof submissionDetail.resultJson === 'string'
                 ? JSON.parse(submissionDetail.resultJson)
@@ -190,7 +192,7 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
                         <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
                             <Typography variant="subtitle1" fontWeight="bold">Статус:</Typography>
                             <Chip
-                                label={isInput ? ({PENDING: 'Ожидает проверки', SUCCESS: 'Верно', FAILED: 'Неверно'}[submissionDetail.status] || submissionDetail.status) : submissionDetail.status}
+                                label={isExam && submissionDetail.status === 'PENDING' ? 'Принято' : isInput ? ({PENDING: 'Ожидает проверки', SUCCESS: 'Верно', FAILED: 'Неверно'}[submissionDetail.status] || submissionDetail.status) : submissionDetail.status}
                                 color={
                                     submissionDetail.status === 'SUCCESS'
                                         ? 'success'
@@ -214,6 +216,11 @@ const SubmissionDetailsDialog = ({ open, onClose, submissionDetail, mode }) => {
                             )}
                         </Stack>
 
+                        {isExam && submissionDetail.status === 'PENDING' && (
+                            <Alert severity="success">
+                                Решение принято. Во время экзамена результат проверки не показывается — проверяется последнее отправленное решение.
+                            </Alert>
+                        )}
                         {isInput && submissionDetail.status === 'PENDING' && (
                             <Alert severity="info">
                                 Ответ принят и ждёт проверки. Проверяется последний отправленный ответ — результат и комментарий появятся здесь после проверки.
