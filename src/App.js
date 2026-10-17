@@ -23,7 +23,9 @@ import CriteriaPage from "./pages/CriteriaPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminMessengersPage from "./pages/AdminMessengersPage";
 import RequireAuth from "./components/RequireAuth";
-import {TelegramConnectDialog} from "./components/TelegramConnect";
+// Диалог подключения Telegram пока отключён — вместо него показываем диалог про допуск к экзамену (вернуть: <TelegramConnectDialog/>).
+// import {TelegramConnectDialog} from "./components/TelegramConnect";
+import ExamAdmissionDialog from "./components/ExamAdmissionDialog";
 import {PrivacyPage} from "./pages/PrivacyPage";
 import {PrivacyPolicyPage} from "./pages/PrivacyPolicyPage";
 import {AdminCourseworksPage} from "./pages/AdminCourseworksPage";
@@ -227,7 +229,7 @@ const AppLayout = ({ mode, toggleTheme }) => {
             </Box>
 
             {!hideFooter && <Footer />}
-            <TelegramConnectDialog/>
+            <ExamAdmissionDialog/>
             <FloorAdBlock/>
             <InImageAdInjector/>
         </Box>
